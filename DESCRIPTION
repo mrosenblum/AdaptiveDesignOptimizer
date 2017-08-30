@@ -5,17 +5,23 @@ Version: 0.1.0
 Authors@R: c(
     person(given = "Michael", family="Rosenblum",
     role=c("cre"), email="mrosen@jhu.edu"),
-    person(given = "Josh", family="Betz")
+    person(given = "Josh", family="Betz",
     role=c("aut"))
+    )
 Maintainer: Michael Rosenblum <mrosen@jhu.edu>
 Description: This software is intended for investigators planning a confirmatory trial
-    where it’s suspected that a subpopulation may benefit more than the overall population.
+    where it's suspected that a subpopulation may benefit more than the overall population.
     The subpopulation could be defined by a risk score or biomarker measured at baseline. 
     The subpopulation must be defined in advance, e.g., based on prior data or medical knowledge. 
     Adaptive enrichment designs have potential to provide stronger evidence than
     standard designs about treatment benefits for the subpopulation,
     its complement, and the combined population.
+Imports:
+    mvtnorm,
+    plyr
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-
+RoxygenNote: 6.0.1
+URL: https://github.com/mrosenblum/AdaptiveDesignOptimizer
+BugReports: https://github.com/mrosenblum/AdaptiveDesignOptimizer/issues

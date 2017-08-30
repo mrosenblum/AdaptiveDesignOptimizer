@@ -1,16 +1,5 @@
-library(mvtnorm)
-library(plyr)
-
-### is.scalar ##################################################################
-# Description: determine if object is scalar.
-# Input:
-#   x (object): object to test
-# Output:
-#   (logical): is object a scalar
-is.scalar <- function(x) is.atomic(x) && length(x) == 1L
-
 ### is.whole.number ############################################################
-# Description: determine if numeric value is a whole number 
+# Description: determine if numeric value is a whole number
 #   (see ?is.integer) for more information.
 # Input:
 #   x (numeric): numeric value
@@ -53,43 +42,43 @@ reals.to.probability <- function(x) plogis(x)/sum(plogis(x))
 #   (numeric matrix): values in (min, max)
 squash <- function(x, x.min=0, x.max=1,
                    method=c("linear", "logit") [1]) {
-  stopifnot(is.numeric(x), 
+  stopifnot(is.numeric(x),
             x.max>x.min)
   switch(method,
-         linear=pmin(pmax(x.min, x), x.max), # Linear Interpolation 
+         linear=pmin(pmax(x.min, x), x.max), # Linear Interpolation
          logit=x.min + (x.max-x.min)*plogis(x, location=(x.max+x.min)/2,
                                             scale=(x.max-x.min)/6)
-         
+
   )
 }
 
 ### get.sample.sizes.per.stage #################################################
 # Description: Calculate the number of patients per arm in multi-stage clinical
 #   trials with one or more treatments compared with controls in one population,
-#   potentially divided into disjoint subgroups. Single subpopulations and 
+#   potentially divided into disjoint subgroups. Single subpopulations and
 #   single-stage trials are also supported.
 #
 # Input:
 #   n.arms (numeric scalar - whole): number of total arms (L+1)
 #   n.per.arm (numeric scalar - whole: number of patients per arm
-#   subpopulation.sizes (numeric vector - vector of probabilities): the 
+#   subpopulation.sizes (numeric vector - vector of probabilities): the
 #     proportion of the population in each disjoint subgroup. Must sum to 1.
 #     Using subpopulation.sizes = NULL or 1 gives a trial in a single
 #     population.
-#   interim.info.times (numeric vector - sorted proportions, ending in 1): The 
+#   interim.info.times (numeric vector - sorted proportions, ending in 1): The
 #     proportion of patients enrolled by each interim analysis. If no interim
-#     analyses are desired, set to NULL or 1. 
+#     analyses are desired, set to NULL or 1.
 #   accrual.rate (numeric scalar): number of patients enrolled per year
 #   delay - numeric : time in years from randomization to observation of primary
 #     outcome
-#   warn.last.accrual.before.interim (logical scalar): warn if an interim 
+#   warn.last.accrual.before.interim (logical scalar): warn if an interim
 #     analysis occurs after enrollment has stopped: such an interim analysis can
 #     not reduce sample size, but may reduce costs of follow-up visits.
 #
-# Output: 
+# Output:
 #   analytic.n.per.stage ([K x J(L+1)] matrix), where K is the number of stages,
 #     J is the number of subpopulations, and L is the number of treatments
-#     compared to the control arm. For continuous or binary outcomes, this 
+#     compared to the control arm. For continuous or binary outcomes, this
 #     represents the patients with primary outcome at each interim analysis; for
 #     survival outcome, this represents number of patients enrolled. Each row is
 #     one stage of the study, with each column indicating the number of outcomes
@@ -127,7 +116,7 @@ get.sample.sizes.per.stage <-
            warn.last.accrual.before.interim=TRUE){
 
     max.arms <- 8 # This can be increased, but not beyond 26 (=dim(letters))
-    
+
     # Input Checks
     stopifnot(is.whole.number(n.arms) & n.arms > 0 & n.arms <= max.arms,
               is.finite(n.arms) & is.scalar(n.arms),
@@ -139,7 +128,7 @@ get.sample.sizes.per.stage <-
               is.finite(delay) & is.scalar(delay),
               is.logical(warn.last.accrual.before.interim) &
                 is.scalar(warn.last.accrual.before.interim))
-    
+
     # Check interim.info.times and subpopulation.sizes for coherence
     if(!is.null(subpopulation.sizes)){
       stopifnot(is.numeric(subpopulation.sizes),
@@ -151,11 +140,11 @@ get.sample.sizes.per.stage <-
     } else {
       subpopulation.sizes <- 1
     }
-    
+
     if(!is.null(interim.info.times)){
       # Numeric, Not empty, strictly increasing
       stopifnot(is.numeric(interim.info.times),
-                length(interim.info.times) >= 1, 
+                length(interim.info.times) >= 1,
                 !is.unsorted(interim.info.times, strictly=TRUE))
       if(length(interim.info.times)>1) {
         # Positive, less than or equal to 1, last value == 1
@@ -166,67 +155,67 @@ get.sample.sizes.per.stage <-
     } else {
       interim.info.times <- 1
     }
-    
+
     # Enforce n.per.arm limit
     if(length(subpopulation.sizes)>1){
       max.per.subpop <- round(head(subpopulation.sizes, -1)*n.per.arm)
       max.per.subpop <- c(max.per.subpop, n.per.arm-sum(max.per.subpop))
     } else max.per.subpop <- n.per.arm
-    
+
     # See if a subpopulation is empty or near empty
     if(sum(round(subpopulation.sizes*n.per.arm)<1)){
       warning(paste0("Empty subgroup: Check n.per.arm (", n.per.arm,
-                     ") and subpopulation.sizes (", 
+                     ") and subpopulation.sizes (",
                      paste(subpopulation.sizes, collapse=", "), ")."))
     }
-    
+
     # Calculate time to accrue n.per.arm
     stages <- length(interim.info.times)
     subgroups <- length(subpopulation.sizes)
     accrual.years <- n.arms*interim.info.times*n.per.arm/accrual.rate
     outcome.years <- accrual.years + delay
-    
+
     # Calculate total patients accrued at interim analyses
     accrued.patients <-
       floor(kronecker(outcome.years*accrual.rate/n.arms,
                         t(subpopulation.sizes)))
-    
+
     # Cap max enrollment - can overshoot with long delay
     for(i in 1:nrow(accrued.patients)) {
       if(sum(accrued.patients[i,] > max.per.subpop)>0) {
         accrued.patients[i,] <- max.per.subpop
       }
     }
-    
+
     # Count the number of outcomes observed at each information time
     accrued.outcomes <- floor(kronecker(interim.info.times,
                                         t(subpopulation.sizes))*n.per.arm)
-    
+
     # Enforce n.per.arm limit
     accrued.outcomes[nrow(accrued.outcomes),] <- tail(accrued.patients, 1)
-    
+
     # Apply names to each arm, subgroup; C for control is column 1 in each block
     arm.names <- c(LETTERS[3], LETTERS[1:max.arms][-3])[1:n.arms]
     analytic.n.per.stage <- kronecker(accrued.outcomes, t(rep(1, n.arms)))
     colnames(analytic.n.per.stage) <-
       paste0(arm.names, rep(1:subgroups, each=n.arms))
-    
+
     total.n.per.stage <- kronecker(accrued.patients, t(rep(1, n.arms)))
     colnames(total.n.per.stage) <-
       paste0(arm.names, rep(1:subgroups, each=n.arms))
 
-    # Optionally warn if accrual completes before interim analysis - 
+    # Optionally warn if accrual completes before interim analysis -
     # If all patients are enrolled before an interim analysis, sample size
     # can't be reduced by efficacy/futility stopping.
     if(warn.last.accrual.before.interim &
        sum(duplicated(total.n.per.stage)>0)) {
       warning("Accrual completed before interim analyses.")
     }
-    
+
     if(sum(analytic.n.per.stage==0)>0){
       warning("Some stage did not accrue a patient in one subpopulation.")
     }
-    
+
     return(list(analytic.n.per.stage=analytic.n.per.stage,
                 total.n.per.stage=total.n.per.stage,
                 accrual.years=accrual.years,
@@ -255,7 +244,7 @@ get.sample.sizes.per.stage <-
 # Description: Create a look-up table that gives the sample size and duration
 # of each potential outcome of a clinical trial. This can be used to calculate
 # ESS and duration from a matrix of simulated trial results. If each row is a
-# simulated trial, and each column specifies the stage at which each (arm x 
+# simulated trial, and each column specifies the stage at which each (arm x
 # subgroup) strata ended the trial, simply tabulate the number of outcomes of
 # each type, merge with the look-up table, and then use weighted.mean() on
 # sample size and duration.
@@ -264,67 +253,67 @@ list.potential.trials <-
   function(total.n.per.stage,
            accrual.rate,
            subpopulation.sizes){
-    
+
     # Get number of arms, subgroups, and stages from total.n.per.stage
-    n.arms <- 
+    n.arms <-
       length(unique(substring(colnames(total.n.per.stage), first=1, last=1)))
     subgroups <- length(unique(substring(colnames(total.n.per.stage), first=2)))
     stages <- nrow(total.n.per.stage)
-    
+
     # Get the increment in sample size at each stage
     incremental.n <- diff(rbind(0, total.n.per.stage))
-    
+
     # Create a list of columns for each subgroup;
     # Vector of columns for each control arm
     subgroup.col <- list()
     for(j in 1:subgroups) subgroup.col[[j]] <-
       which(substring(colnames(total.n.per.stage), first=2)==j)
     control.col <- match(paste0("C", 1:subgroups), colnames(total.n.per.stage))
-    
+
     ### Calculate possible sample sizes, durations
     # Create all potential outcomes: Arm x Subopulation x Stage combinations
     all.trials <- matrix(1:stages, nrow=stages, ncol=subgroups*n.arms)
     colnames(all.trials) <- colnames(total.n.per.stage)
     all.trials <- expand.grid(data.frame(all.trials))
-    
+
     if(nrow(all.trials)>1){
-      
+
       # Restrict such that active treatments can't enroll without controls:
       # Keep only trials where the last stage reached by any treatment is equal
       # to the last stage reached by control
       for(j in 1:subgroups){
         tx.cols <- setdiff(subgroup.col[[j]], control.col[j])
         all.trials <-
-          all.trials[which(apply(all.trials[,tx.cols], 1, max) == 
+          all.trials[which(apply(all.trials[,tx.cols], 1, max) ==
                              all.trials[,control.col[j]]),]
       }
-      
+
       stage.duration <- matrix(0, nrow=nrow(all.trials), ncol=subgroups)
       trial.duration <- matrix(0, nrow=nrow(all.trials))
-      
+
       for (k in 1:stages){
-        patients.stage.k <- 
+        patients.stage.k <-
           (all.trials >= k)* # If Treatment x Subpopulation strata in stage k
-          kronecker(matrix(1, nrow=nrow(all.trials)), 
+          kronecker(matrix(1, nrow=nrow(all.trials)),
                     t(incremental.n[k,])) # Incremental sample size by strata
-        
+
         # Count arms enrolling; Get accrual rate in subpopulation by adjusting
         # subpopulation accrual rate by arms enrolling in current stage
         for (j in 1:subgroups){
           arms.enrolling <- rowSums((all.trials >= k)[, subgroup.col[[j]]])
-          randomization.rate <- 
+          randomization.rate <-
             (accrual.rate)*subpopulation.sizes[j]*n.arms/arms.enrolling
-          stage.duration[,j] <- 
+          stage.duration[,j] <-
             rowSums(patients.stage.k[, subgroup.col[[j]]])/randomization.rate
         }
         trial.duration <- trial.duration + apply(stage.duration, 1, max)
-        
+
       }
-      
+
       # Calculate sample size of each trial
       potential.trials <-
         data.frame(all.trials,
-                   sample.size=apply(t(all.trials), 2, function(x) 
+                   sample.size=apply(t(all.trials), 2, function(x)
                      sum(total.n.per.stage[cbind(x, 1:ncol(all.trials))])),
                    duration=trial.duration)
 
@@ -333,7 +322,7 @@ list.potential.trials <-
                                      sample.size=all.trials,
                                      duration=all.trials/accrual.rate)
     }
-    
+
     return(potential.trials)
 }
 
@@ -365,33 +354,33 @@ calculate.trial.criteria <-
            decisions.stages,
            null.hypotheses=NULL,
            potential.trials){
-    
+
     # Add warning if names of decisions.stages don't match potential.trials
-    
+
     # Get number of arms, subgroups, and stages from total.n.per.stage
-    n.arms <- 
+    n.arms <-
       length(unique(substring(colnames(decisions.stages), first=1, last=1)))
     subgroups <- length(unique(substring(colnames(decisions.stages), first=2)))
     n.simulations <- nrow(decisions.stages)
-    
+
     # Create a list of columns for each subgroup;
     # Vector of columns for each control arm
     subgroup.col <- list()
     for(j in 1:subgroups) subgroup.col[[j]] <-
       which(substring(colnames(decisions.stages), first=2)==j)
-    
+
     conj.power.subgroups <-
       matrix(NA, nrow=n.simulations, ncol=subgroups)
     disj.power.subgroups <-
       matrix(NA, nrow=n.simulations, ncol=subgroups)
-    
+
     # Copy decisions.rejections
     empirical.alpha <- empirical.power <- decisions.rejections
     if(!is.null(null.hypotheses)){
       empirical.power[, null.hypotheses] <- NA
       empirical.alpha[, -null.hypotheses] <- NA
     }
-    
+
     for(j in 1:subgroups){
       non.null.sub.cols <- setdiff(subgroup.col[[j]], null.hypotheses)
       if(length(non.null.sub.cols)>0){
@@ -400,8 +389,8 @@ calculate.trial.criteria <-
         disj.power.subgroups[,j] <- mean(rowMeans(sub.cols)>0)
       }
     }
-    
-    
+
+
     conj.power.subgroups <- colMeans(conj.power.subgroups)
     disj.power.subgroups <- colMeans(disj.power.subgroups)
     names(disj.power.subgroups) <- paste0("DIS_Power_", 1:subgroups)
@@ -410,7 +399,7 @@ calculate.trial.criteria <-
     conj.power <- mean(rowMeans(empirical.power, na.rm=TRUE)==1)
     disj.power <- mean(rowMeans(empirical.power, na.rm=TRUE)>0)
     empirical.power <- colMeans(empirical.power==1)
-    
+
     if(!is.null(null.hypotheses)){
       fwer <- mean(rowMeans(empirical.alpha, na.rm=TRUE)>0)
       type.1.error <- colMeans(empirical.alpha==1)
@@ -418,18 +407,18 @@ calculate.trial.criteria <-
       fwer <- NA
       type.1.error <- head(decisions.stages, 1)*NA
     }
-    
+
     distribution.of.trials <- count(decisions.stages)
     names(distribution.of.trials) <- c(colnames(decisions.stages), "frequency")
-    distribution.of.trials$proportion <- 
+    distribution.of.trials$proportion <-
       distribution.of.trials$frequency/n.simulations
-    
+
     distribution.of.trials <- merge(potential.trials,
                                     distribution.of.trials)
     distribution.of.trials <-
       distribution.of.trials[union(names(potential.trials),
                                    names(distribution.of.trials))]
-    
+
     return(list(distribution.of.trials=distribution.of.trials,
                 power=empirical.power,
                 conj.power=conj.power,
@@ -439,11 +428,11 @@ calculate.trial.criteria <-
                 type.1.error=type.1.error,
                 fwer=fwer))
   }
-                   
+
 ### linear.threshold.penalty ###################################################
 # Description: determine if a matrix of values meets or exceeds a matrix of
 #   thresholds. A linear penalty is applied to values below the thresholds.
-#   A loss matrix is returned of the same dimension as the power matrix and 
+#   A loss matrix is returned of the same dimension as the power matrix and
 #   thresholds.
 #
 # If any scenario x hypothesis combinations do not contribute to the penalty,
@@ -455,7 +444,7 @@ calculate.trial.criteria <-
 #   linear.penalty (numeric scalar - positive): a positive linear penalty to
 #     scale the absolute difference between x and threshold.matrix
 #
-# Output: 
+# Output:
 #   loss (numeric matrix): a (MxH) matrix of loss values.
 linear.threshold.penalty <-
   function(x,
@@ -466,14 +455,14 @@ linear.threshold.penalty <-
     stopifnot(is.numeric(linear.penalty) & is.scalar(linear.penalty),
               linear.penalty>=0,
               identical(dim(x), dim(threshold.matrix)))
-    
+
     return(linear.penalty*(x<threshold.matrix)*abs(x-threshold.matrix))
   }
-                   
+
 ### power.penalized.weighted.ess ###############################################
 # Description: an objective function that encorporates a weighted average of
 #   expected sample size (ESS) across outcome scenarios, with an added penalty
-#   for each violation of the power constraints. 
+#   for each violation of the power constraints.
 #
 # Input:
 #   trial.performance (trial performance object): trial performance to evaluate.
@@ -491,35 +480,35 @@ linear.threshold.penalty <-
 #
 #
 # Output: an objective function value.
-power.penalized.weighted.ess <- 
+power.penalized.weighted.ess <-
   function(trial.performance,
            scenario.weights=NULL,
            power.constraints=NULL,
            power.penalty=10,
            objective.scale=1) {
-    
+
     stopifnot("ess" %in% names(trial.performance),
               "power" %in% names(trial.performance),
               is.numeric(objective.scale) & is.scalar(objective.scale),
               is.finite(objective.scale) & objective.scale > 0)
-    
+
     trial.power <- as.matrix(trial.performance$power)
-    
+
     if(is.null(power.constraints)){
       power.constraints <-
         matrix(0.8, nrow=nrow(trial.power), ncol=ncol(trial.power))
     }
-    
+
     if(is.null(scenario.weights)){
       scenario.weights <- rep(1, length(trial.performance$ess))
     }
-    
-    objective.value <- 
+
+    objective.value <-
       weighted.mean(trial.performance$ess, w=scenario.weights) +
       sum(linear.threshold.penalty(trial.performance$power,
                                threshold.matrix=power.constraints,
                                linear.penalty=power.penalty), na.rm=TRUE)
-    
+
     stopifnot(is.scalar(objective.value))
     return(objective.value/objective.scale)
   }
@@ -558,7 +547,7 @@ power.penalized.weighted.ess <-
 #   parameters (list): a named list of parameters which are assumed to take any
 #     real value.
 #
-#   transforms (list): a named list of functions used to transform the 
+#   transforms (list): a named list of functions used to transform the
 #     parameters from real values to another set. This can be used to handle
 #     parameters that are strictly positive, require normalization, and so on,
 #     such as alpha (re)allocation and information times. The names of the list
@@ -569,21 +558,21 @@ power.penalized.weighted.ess <-
 #
 transform.parameters <- function(parameters,
                                  transforms) {
-  
+
   # 1. Make sure parameters and transforms are named
   if(sum(nchar(names(parameters))==0) > 0) {
     stop("parameters must be named to avoid ambiguity")
   }
-  
+
   if(sum(nchar(names(transforms))==0) > 0) {
     stop("transforms must be named to avoid ambiguity")
   }
-  
+
   if(!is.null(transforms)){
-    
+
     # 2. Make sure transforms map uniquely to parameters
     which.tf <- match(names(transforms), names(parameters))
-    
+
     if(length(unique(which.tf)) != length(transforms)){
       if(sum(duplicated(which.tf))>0) {
         stop("transforms did not uniquely match to parameters")
@@ -594,13 +583,13 @@ transform.parameters <- function(parameters,
       }
     }
   }
-  
+
   tf.params <- parameters
   for(i in 1:length(which.tf)) {
-    tf.params[[which.tf[i]]] <- 
+    tf.params[[which.tf[i]]] <-
       transforms[[i]](parameters[[which.tf[i]]])
   }
-  
+
   return(tf.params)
 }
 
@@ -609,7 +598,7 @@ transform.parameters <- function(parameters,
 #                        total.alpha=0.025,
 #                        alpha.allocation=c(0, 0, 0, 0))
 # search.transforms <- list(alpha.allocation=reals.to.probability)
-# 
+#
 # transform.parameters(search.parameters,
 #                      search.transforms)
 
@@ -631,22 +620,22 @@ get.optim.trajectory <- function(optim.text) {
   optim.text <- data.frame(iteration=NA, obj.fx=NA, optim.text=optim.text)
   optim.text$iteration <-
     as.numeric(gsub("(iter)|(value.*)", "", optim.text$optim.text))
-  optim.text$obj.fx <- 
+  optim.text$obj.fx <-
     as.numeric(gsub("iter\\s*\\d*\\s*value", "", optim.text$optim.text))
   optim.text[c("iteration", "obj.fx")]
 }
 
 ### sa.optimize ################################################################
 # Description: this is a wrapper for optimizing objects, which requires two
-#   functions: a function from the parameters to create an object, and a 
+#   functions: a function from the parameters to create an object, and a
 #   function that assigns a value to the object (a loss function that takes
 #   in an object and produces a numeric scalar value). This allows optimization
 #   of objects using simulated annealing by attempting to minimize the loss for
 #   a given set of parameters.
 #
-#   create.object() is a function that takes the lists search.parameters and 
+#   create.object() is a function that takes the lists search.parameters and
 #   fixed.parameters, and produces an object. Optional transforms specified
-#   by search.transforms can constrain this parameter space. The function 
+#   by search.transforms can constrain this parameter space. The function
 #   evaluate.object() maps the object to a numeric scalar, using the optional
 #   parameters specified by ellipsis (...).
 #
@@ -656,7 +645,7 @@ get.optim.trajectory <- function(optim.text) {
 #   object.to.optimize <- create.object(transformed.parameters)
 #   objective.value = evaluate.object(object.to.optimize, ...)
 #
-#   If G is create.object and F is evaluate.object, SA will try to find: 
+#   If G is create.object and F is evaluate.object, SA will try to find:
 #     xmin = argmin(F(G(x1, x2, ..., xd)))
 #
 # Input:
@@ -675,7 +664,7 @@ get.optim.trajectory <- function(optim.text) {
 #     fully specify the creation of the object, along with their values: passed
 #     to create.object()
 #
-#   create.object (function): a function which accepts the arguments 
+#   create.object (function): a function which accepts the arguments
 #     search.parameters (after transformation by search.transforms) and
 #     fixed.parameters, and returns an object.
 #
@@ -688,14 +677,14 @@ get.optim.trajectory <- function(optim.text) {
 #   temperature (positive numeric scalar): 'temperature' parameter for simulated
 #     annealing. See ?optim() for more details.
 #
-#   evals.per.temp (positive numeric scalar): number of evaluations per 
+#   evals.per.temp (positive numeric scalar): number of evaluations per
 #     temperature. See ?optim() for more details.
 #
 #   report.iteration (positive numeric scalar): interval for reporting objective
 #     function - report every x iterations. See ?optim() for more details.
 #
 # Output:
-# parameters: the list of parameters for the optimized object, after any 
+# parameters: the list of parameters for the optimized object, after any
 #   transformations were applied.
 # optimization.trajectory: a data frame of the objective function values by
 #   iteration. See get.optim.trajectory().
@@ -714,21 +703,21 @@ sa.optimize <-
            parameter.scale=1,
            ...){
 
-    
+
     # optim() can only take vectors: need to unlist/relist to retain structure.
     initial.param <- as.relistable(search.parameters)
-    
+
     optim.trajectory <-
       capture.output(
-        sa.result <- 
+        sa.result <-
           optim(par=unlist(initial.param),
                 fn=function(varying,
                             transforms=search.transforms,
                             fixed=fixed.parameters,
-                            objective.fx=evaluate.object){ 
+                            objective.fx=evaluate.object){
                   # Re-structure parameters as list
                   varying <- relist(varying, skeleton=search.parameters)
-                  
+
                   # Call user-specified create.object function: capture any text
                   discard.text <-
                     capture.output(
@@ -738,14 +727,14 @@ sa.optimize <-
                                                             transforms),
                                        fixed))
                     )
-                      
+
                   # Call user-specified objective function: capture any text
                   discard.text <-
                     capture.output(
                       obj.fx <- do.call(what=evaluate.object,
                                         args=list(object=sa.object, ...))
                     )
-                  
+
                   obj.fx
                 },
                 method="SANN",
@@ -757,12 +746,12 @@ sa.optimize <-
                              fnscale=function.scale,
                              parscale=parameter.scale))
       )
-        
+
     # Re-structure result as list
     search.parameters <- relist(sa.result$par, skeleton=search.parameters)
-    
+
     # Transform results and return
-    parameters <- 
+    parameters <-
       c(transform.parameters(search.parameters, search.transforms),
         fixed.parameters)
 
@@ -793,20 +782,4 @@ my.result$optimization.trajectory
 my.result$parameters
 
 
-### sa.temperature #############################################################
-# Description: this is a function for viewing the default cooling schedule for
-#   optim()'s implementation of simulated annealing. The behavior of simulated
-#   annealing can strongly depend on the initial temperature.
-sa.temperature <- 
-  function(iteration=1,
-           max.iterations=10000,
-           temperature=10,
-           evals.per.temp=10) {
-  temperature / log(((iteration-1) %/% evals.per.temp)*evals.per.temp + exp(1))
-}
-### sa.temp example ############################################################
-# sa.temperature(iteration=20, max.iterations=1e4,
-#                temperature=10, evals.per.temp=10)
-# plot(sa.temperature(iteration=seq(1, 1e4), max.iterations=1e4,
-#                     temperature=10, evals.per.temp=500)~seq(1, 1e4), type='l',
-#      ylab="SA Temperature", xlab="Iteration")
+
