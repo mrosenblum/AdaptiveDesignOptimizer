@@ -13,12 +13,16 @@ optimize_designs(ui.n.arms, ui.type.of.outcome.data,
   ui.relative.efficiency, ui.max.stages, ui.sann,
   ui.include.designs.start.subpop.1, ui.population.parameters, ui.desired.power,
   ui.scenario.weights, min.n.per.arm = 25, min.enrollment.period = 0.5,
-  default.function.scale = 1, default.n.scale = 100,
-  default.period.scale = 2, default.max.iterations = 1000,
-  default.n.simulations = 10000, default.means.temperature = 100,
-  default.survival.temperature = 10, default.evals.per.temp = 10,
-  default.report.iteration = 1, default.power.penalty = 1e+05,
-  default.boundary.to.enroll = 1)
+  simulated.annealing.parameter.function.scale = 1,
+  simulated.annealing.parameter.n.scale = 100,
+  simulated.annealing.parameter.period.scale = 2,
+  simulated.annealing.parameter.max.iterations = 1000,
+  simulated.annealing.parameter.n.simulations = 10000,
+  simulated.annealing.parameter.means.temperature = 100,
+  simulated.annealing.parameter.survival.temperature = 10,
+  simulated.annealing.parameter.evals.per.temp = 10,
+  simulated.annealing.parameter.report.iteration = 1,
+  simulated.annealing.parameter.power.penalty = 1e+05)
 }
 \arguments{
 \item{ui.n.arms}{(the prefix 'ui' abbreviates 'user-input') Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm; the design classes that come with this package can handle 2 or 3 arms}
@@ -53,7 +57,7 @@ optimize_designs(ui.n.arms, ui.type.of.outcome.data,
 
 \item{ui.max.stages}{Maximum number of stages allowed (currently not used by default classes of trial designs)}
 
-\item{ui.sann}{Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see default.max.iterations below}
+\item{ui.sann}{Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see simulated.annealing.parameter.max.iterations below}
 
 \item{ui.include.designs.start.subpop.1}{Search over designs that allow only subpopulation 1 to be enrolled during stage 1; TRUE or FALSE}
 
@@ -67,27 +71,25 @@ optimize_designs(ui.n.arms, ui.type.of.outcome.data,
 
 \item{min.enrollment.period}{Minimum enrollment duration for trial}
 
-\item{default.function.scale}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.function.scale}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.n.scale}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.n.scale}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.period.scale}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.period.scale}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.max.iterations}{Maximum Number of Different Designs to Search Over using Simluated Annealing optimization}
+\item{simulated.annealing.parameter.max.iterations}{Maximum Number of Different Designs to Search Over using Simluated Annealing optimization}
 
-\item{default.n.simulations}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.n.simulations}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.means.temperature}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.means.temperature}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.survival.temperature}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.survival.temperature}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.evals.per.temp}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.evals.per.temp}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.report.iteration}{Used by Simulated Annealing Optimization algorithm}
+\item{simulated.annealing.parameter.report.iteration}{Used by Simulated Annealing Optimization algorithm}
 
-\item{default.power.penalty}{Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm}
-
-\item{default.boundary.to.enroll}{Starting Value used by Simulated Annealing Optimization algorithm for designs where option ui.include.designs.start.subpop.1=TRUE}
+\item{simulated.annealing.parameter.power.penalty}{Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm}
 }
 \value{
 List of optimized designs
@@ -119,6 +121,6 @@ optimize_designs(
   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001, 1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,,dimnames=list(c(),c("lambda1_con","lambda2_con","lambda1_trt","lambda2_trt"))),
   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3, byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight"))),
-    default.max.iterations=2,
+  simulated.annealing.parameter.max.iterations=2,
   )
 }

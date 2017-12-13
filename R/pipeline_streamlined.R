@@ -17,24 +17,23 @@
 #' @param ui.incorporate.precision.gain Incorporate into analysis a precision gain from adjustment for prognostic baseline variables; allowed values: TRUE or FALSE
 #' @param ui.relative.efficiency If ui.incorporate.precision.gain==TRUE, this specifies relative efficiency (number > 1), representing the assumed precision gain from adjustment for prognostic baseline variables.
 #' @param ui.max.stages Maximum number of stages allowed (currently not used by default classes of trial designs)
-#' @param ui.sann Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see default.max.iterations below
+#' @param ui.sann Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see simulated.annealing.parameter.max.iterations below
 #' @param ui.include.designs.start.subpop.1 Search over designs that allow only subpopulation 1 to be enrolled during stage 1; TRUE or FALSE
 #' @param ui.population.parameters Matrix encoding scenarios (data generating distributions) used to define power constraints and  objective function
 #' @param ui.desired.power Matrix encoding power requirements for each scenario
 #' @param ui.scenario.weights Matrix encoding weights used to define objective function
 #' @param min.n.per.arm Minimum sample size per arm allowed
 #' @param min.enrollment.period Minimum enrollment duration for trial
-#' @param default.function.scale Used by Simulated Annealing Optimization algorithm
-#' @param default.n.scale Used by Simulated Annealing Optimization algorithm
-#' @param default.period.scale Used by Simulated Annealing Optimization algorithm
-#' @param default.max.iterations Maximum Number of Different Designs to Search Over using Simluated Annealing optimization
-#' @param default.n.simulations Used by Simulated Annealing Optimization algorithm
-#' @param default.means.temperature Used by Simulated Annealing Optimization algorithm
-#' @param default.survival.temperature Used by Simulated Annealing Optimization algorithm
-#' @param default.evals.per.temp Used by Simulated Annealing Optimization algorithm
-#' @param default.report.iteration Used by Simulated Annealing Optimization algorithm
-#' @param default.power.penalty Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm
-#' @param default.boundary.to.enroll Starting Value used by Simulated Annealing Optimization algorithm for designs where option ui.include.designs.start.subpop.1=TRUE
+#' @param simulated.annealing.parameter.function.scale Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.n.scale Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.period.scale Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.max.iterations Maximum Number of Different Designs to Search Over using Simluated Annealing optimization
+#' @param simulated.annealing.parameter.n.simulations Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.means.temperature Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.survival.temperature Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.evals.per.temp Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.report.iteration Used by Simulated Annealing Optimization algorithm
+#' @param simulated.annealing.parameter.power.penalty Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm
 #' @return List of optimized designs
 #' @export
 #' @examples
@@ -60,7 +59,7 @@
 #'   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001, 1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,,dimnames=list(c(),c("lambda1_con","lambda2_con","lambda1_trt","lambda2_trt"))),
 #'   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3, byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
 #'   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight"))),
-#'     default.max.iterations=2,
+#'   simulated.annealing.parameter.max.iterations=2,
 #'   )
 #' @importFrom stats plogis
 #' @importFrom mvtnorm pmvnorm GenzBretz
@@ -88,17 +87,16 @@ optimize_designs <- function(
   ui.scenario.weights,
   min.n.per.arm =25,       # For Continuous/Binary Outcomes
   min.enrollment.period =0.5,    # For Survival Outcomes
-  default.function.scale =1,
-  default.n.scale =100,
-  default.period.scale =2,
-  default.max.iterations =1000,
-  default.n.simulations =1e4,
-  default.means.temperature =100,
-  default.survival.temperature =10,
-  default.evals.per.temp =10,
-  default.report.iteration =1,
-  default.power.penalty =100000,
-  default.boundary.to.enroll =1
+  simulated.annealing.parameter.function.scale =1,
+  simulated.annealing.parameter.n.scale =100,
+  simulated.annealing.parameter.period.scale =2,
+  simulated.annealing.parameter.max.iterations =1000,
+  simulated.annealing.parameter.n.simulations =1e4,
+  simulated.annealing.parameter.means.temperature =100,
+  simulated.annealing.parameter.survival.temperature =10,
+  simulated.annealing.parameter.evals.per.temp =10,
+  simulated.annealing.parameter.report.iteration =1,
+  simulated.annealing.parameter.power.penalty =100000
 ){
   # Get start time
   isa.start.time <- proc.time()
@@ -214,7 +212,7 @@ optimize_designs <- function(
     #                                                      outcome.sd=ui.outcome.sd,
     #                                                      mcid=ui.mcid,
     #                                                      futility.boundaries=NULL,
-    #                                                      relative.efficiency=ui.relative.efficiency,        #                                                      n.simulations=default.n.simulations,
+    #                                                      relative.efficiency=ui.relative.efficiency,        #                                                      n.simulations=simulated.annealing.parameter.n.simulations,
     #                                                      alpha.allocation=rep(1/number.of.alpha.allocation.components,
     #                                                                           number.of.alpha.allocation.components),
     #                                                      total.alpha=ui.total.alpha)
@@ -240,7 +238,7 @@ optimize_designs <- function(
                                                                          mcid=ui.mcid,
                                                                          futility.boundaries=NULL,
                                                                          relative.efficiency=ui.relative.efficiency,
-                                                                         n.simulations=default.n.simulations,
+                                                                         n.simulations=simulated.annealing.parameter.n.simulations,
                                                                          alpha.allocation=rep(1/number.of.alpha.allocation.components,
                                                                                               number.of.alpha.allocation.components),
                                                                          total.alpha=ui.total.alpha,
@@ -277,7 +275,7 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=NULL,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         alpha.allocation=rep(1/number.of.alpha.allocation.components,
                                                              number.of.alpha.allocation.components),
                                         total.alpha=ui.total.alpha,
@@ -286,14 +284,14 @@ optimize_designs <- function(
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=default.n.scale,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=simulated.annealing.parameter.n.scale,
                   max.iterations=2,
-                  temperature=default.means.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  temperature=simulated.annealing.parameter.means.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
 
@@ -319,7 +317,7 @@ optimize_designs <- function(
     #                                                        mcid=ui.mcid,
     #                                                        futility.boundaries=NULL,
     #                                                        relative.efficiency=ui.relative.efficiency,
-    #                                                         n.simulations=default.n.simulations,
+    #                                                         n.simulations=simulated.annealing.parameter.n.simulations,
     #                                                        alpha.allocation=
     #                                                          rep(1/number.of.alpha.allocation.components,
     #                                                              number.of.alpha.allocation.components),
@@ -349,7 +347,7 @@ optimize_designs <- function(
                                                                          mcid=ui.mcid,
                                                                          futility.boundaries=NULL,
                                                                          relative.efficiency=ui.relative.efficiency,
-                                                                         n.simulations=default.n.simulations,
+                                                                         n.simulations=simulated.annealing.parameter.n.simulations,
                                                                          alpha.allocation=
                                                                            rep(1/number.of.alpha.allocation.components,
                                                                                number.of.alpha.allocation.components),
@@ -391,7 +389,7 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=NULL,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         alpha.allocation=
                                           rep(1/number.of.alpha.allocation.components,
                                               number.of.alpha.allocation.components),
@@ -401,14 +399,14 @@ optimize_designs <- function(
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=default.period.scale,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=simulated.annealing.parameter.period.scale,
                   max.iterations=2,
-                  temperature=default.survival.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  temperature=simulated.annealing.parameter.survival.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
   }
@@ -442,21 +440,21 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=NULL,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         total.alpha=ui.total.alpha,
                                         construct.joint.distribution.of.test.statistics=construct.joint.distribution.of.test.statistics,
                                         generate.efficacy.boundaries=generate.efficacy.boundaries,
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=c(default.n.scale,rep(1,number.of.alpha.allocation.components)),
-                  max.iterations=default.max.iterations,
-                  temperature=default.means.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=c(simulated.annealing.parameter.n.scale,rep(1,number.of.alpha.allocation.components)),
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.means.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
 
@@ -489,21 +487,21 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=NULL,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         total.alpha=ui.total.alpha,
                                         construct.joint.distribution.of.test.statistics=construct.joint.distribution.of.test.statistics,
                                         generate.efficacy.boundaries=generate.efficacy.boundaries,
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=c(default.period.scale,rep(1,number.of.alpha.allocation.components)),
-                  max.iterations=default.max.iterations,
-                  temperature=default.survival.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=c(simulated.annealing.parameter.period.scale,rep(1,number.of.alpha.allocation.components)),
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.survival.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
   }
@@ -540,7 +538,7 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=rep(-3,(n.arms-1)*n.subpopulations),
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         alpha.allocation=rep(1/number.of.alpha.allocation.components,
                                                              number.of.alpha.allocation.components),
                                         total.alpha=ui.total.alpha,
@@ -549,14 +547,14 @@ optimize_designs <- function(
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=default.n.scale,
-                  max.iterations=default.max.iterations,
-                  temperature=default.means.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=simulated.annealing.parameter.n.scale,
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.means.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
   } else { # Survival Cases
@@ -588,7 +586,7 @@ optimize_designs <- function(
                                         mcid=ui.mcid,
                                         futility.boundaries=rep(-3,(n.arms-1)*n.subpopulations),
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         alpha.allocation=
                                           rep(1/number.of.alpha.allocation.components,
                                               number.of.alpha.allocation.components),
@@ -598,14 +596,14 @@ optimize_designs <- function(
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=default.period.scale,
-                  max.iterations=default.max.iterations,
-                  temperature=default.survival.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=simulated.annealing.parameter.period.scale,
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.survival.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
   }
@@ -640,7 +638,7 @@ optimize_designs <- function(
                                         outcome.sd=ui.outcome.sd,
                                         mcid=ui.mcid,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         total.alpha=ui.total.alpha,
                                         construct.joint.distribution.of.test.statistics=construct.joint.distribution.of.test.statistics,
                                         generate.efficacy.boundaries=generate.efficacy.boundaries,
@@ -648,14 +646,14 @@ optimize_designs <- function(
                   ),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=c(default.n.scale,rep(1,n.stages+(n.arms-1)*n.subpopulations+number.of.alpha.allocation.components)),
-                  max.iterations=default.max.iterations,
-                  temperature=default.means.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=c(simulated.annealing.parameter.n.scale,rep(1,n.stages+(n.arms-1)*n.subpopulations+number.of.alpha.allocation.components)),
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.means.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
 
@@ -691,21 +689,21 @@ optimize_designs <- function(
                                         restrict.enrollment=FALSE,
                                         mcid=ui.mcid,
                                         relative.efficiency=ui.relative.efficiency,
-                                        n.simulations=default.n.simulations,
+                                        n.simulations=simulated.annealing.parameter.n.simulations,
                                         total.alpha=ui.total.alpha,
                                         construct.joint.distribution.of.test.statistics=construct.joint.distribution.of.test.statistics,
                                         generate.efficacy.boundaries=generate.efficacy.boundaries,
                                         design.evaluate=design.evaluate),
                   create.object=triage.based.on.outcome.type,
                   evaluate.object=power.penalized.weighted,
-                  function.scale=default.function.scale,
-                  parameter.scale=c(default.n.scale,rep(1,n.stages+(n.arms-1)*n.subpopulations+number.of.alpha.allocation.components)),
-                  max.iterations=default.max.iterations,
-                  temperature=default.survival.temperature,
-                  evals.per.temp=default.evals.per.temp,
-                  report.iteration=default.report.iteration,
+                  function.scale=simulated.annealing.parameter.function.scale,
+                  parameter.scale=c(simulated.annealing.parameter.n.scale,rep(1,n.stages+(n.arms-1)*n.subpopulations+number.of.alpha.allocation.components)),
+                  max.iterations=simulated.annealing.parameter.max.iterations,
+                  temperature=simulated.annealing.parameter.survival.temperature,
+                  evals.per.temp=simulated.annealing.parameter.evals.per.temp,
+                  report.iteration=simulated.annealing.parameter.report.iteration,
                   scenario.weights=ui.scenario.weights,
-                  power.penalty=default.power.penalty,
+                  power.penalty=simulated.annealing.parameter.power.penalty,
                   power.constraints=ui.desired.power,
                   optimization.target=ui.optimization.target)
   }
