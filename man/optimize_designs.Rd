@@ -12,18 +12,82 @@ optimize_designs(ui.n.arms, ui.type.of.outcome.data,
   ui.time.to.event.censoring.rate, ui.mcid, ui.incorporate.precision.gain,
   ui.relative.efficiency, ui.max.stages, ui.sann,
   ui.include.designs.start.subpop.1, ui.population.parameters, ui.desired.power,
-  ui.scenario.weights, default.pct.of.max = 0.8, min.n.per.arm = 25,
-  min.enrollment.period = 0.5, default.function.scale = 1,
-  default.n.scale = 100, default.period.scale = 2,
-  default.max.iterations = 1000, default.n.simulations = 10000,
-  default.means.temperature = 100, default.survival.temperature = 10,
-  default.evals.per.temp = 10, default.report.iteration = 1,
-  default.power.penalty = 1e+05, default.boundary.to.enroll = 1)
+  ui.scenario.weights, min.n.per.arm = 25, min.enrollment.period = 0.5,
+  default.function.scale = 1, default.n.scale = 100,
+  default.period.scale = 2, default.max.iterations = 1000,
+  default.n.simulations = 10000, default.means.temperature = 100,
+  default.survival.temperature = 10, default.evals.per.temp = 10,
+  default.report.iteration = 1, default.power.penalty = 1e+05,
+  default.boundary.to.enroll = 1)
 }
 \arguments{
-\item{ui.n.arms}{Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm}
+\item{ui.n.arms}{(the prefix 'ui' abbreviates 'user-input') Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm; the design classes that come with this package can handle 2 or 3 arms}
 
-\item{ui.type.of.outcome.data}{"continuous", "binary", or "survival"}
+\item{ui.type.of.outcome.data}{"continuous", "binary", or "time-to-event" (i.e., survival outcome)}
+
+\item{ui.time.to.event.trial.type}{"superiority" or "non-inferiority" trial type; only implemented for time-to-event outcomes}
+
+\item{ui.time.to.event.non.inferiority.trial.margin}{Non-inferiority margin; only relevant if outcome is time-to-event and trial type is non-inferiority. Represented as hazard ratio, required to be at least 1.}
+
+\item{ui.subpopulation.1.size}{Proportion of overall population in subpopulation 1. Must be between 0 and 1.}
+
+\item{ui.total.alpha}{Familywise Type I error rate (1-sided)}
+
+\item{ui.max.size}{Maximum allowed sample size}
+
+\item{ui.max.duration}{Maximum allowed trial duration in years}
+
+\item{ui.accrual.yearly.rate}{Number of participants enrolled per year; assumed constant throughout trial}
+
+\item{ui.followup.length}{Time from enrollment to measurement of primary outcome (only used for continuous or binary outcome types)}
+
+\item{ui.optimization.target}{Quantity being optimized (objective function); "size" represents expected sample size}
+
+\item{ui.time.to.event.censoring.rate}{probability that primary outcome is censored, assumed to be independent of the outcome and subpopulation; only implemented for time-to-event outcomes}
+
+\item{ui.mcid}{Minimum, Clinically Important Treatment Effect (as difference of population means for binary/continuous outcomes; as hazard ratio for time-to-event outcomes)}
+
+\item{ui.incorporate.precision.gain}{Incorporate into analysis a precision gain from adjustment for prognostic baseline variables; allowed values: TRUE or FALSE}
+
+\item{ui.relative.efficiency}{If ui.incorporate.precision.gain==TRUE, this specifies relative efficiency (number > 1), representing the assumed precision gain from adjustment for prognostic baseline variables.}
+
+\item{ui.max.stages}{Maximum number of stages allowed (currently not used by default classes of trial designs)}
+
+\item{ui.sann}{Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see default.max.iterations below}
+
+\item{ui.include.designs.start.subpop.1}{Search over designs that allow only subpopulation 1 to be enrolled during stage 1; TRUE or FALSE}
+
+\item{ui.population.parameters}{Matrix encoding scenarios (data generating distributions) used to define power constraints and  objective function}
+
+\item{ui.desired.power}{Matrix encoding power requirements for each scenario}
+
+\item{ui.scenario.weights}{Matrix encoding weights used to define objective function}
+
+\item{min.n.per.arm}{Minimum sample size per arm allowed}
+
+\item{min.enrollment.period}{Minimum enrollment duration for trial}
+
+\item{default.function.scale}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.n.scale}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.period.scale}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.max.iterations}{Maximum Number of Different Designs to Search Over using Simluated Annealing optimization}
+
+\item{default.n.simulations}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.means.temperature}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.survival.temperature}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.evals.per.temp}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.report.iteration}{Used by Simulated Annealing Optimization algorithm}
+
+\item{default.power.penalty}{Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm}
+
+\item{default.boundary.to.enroll}{Starting Value used by Simulated Annealing Optimization algorithm for designs where option ui.include.designs.start.subpop.1=TRUE}
 }
 \value{
 List of optimized designs

@@ -267,10 +267,10 @@ get.sample.sizes.per.stage <-
     # Optionally warn if accrual completes before interim analysis -
     # If all patients are enrolled before an interim analysis, sample size
     # can't be reduced by efficacy/futility stopping.
-    if(warn.last.accrual.before.interim &
-       sum(duplicated(total.n.per.stage)>0)) {
-      warning("Accrual completed before interim analyses.")
-    }
+    #if(warn.last.accrual.before.interim &
+    #   sum(duplicated(total.n.per.stage)>0)) {
+    #  warning("Accrual completed before interim analyses.")
+    #}
 
     if(sum(analytic.n.per.stage==0)>0){
       warning("Some stage did not accrue a patient in one subpopulation.")
