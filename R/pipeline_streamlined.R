@@ -1,41 +1,40 @@
 #' Streamlined Design Optimization Pipeline
 #' Authors: Josh Betz (jbetz@jhu.edu) and Michael Rosenblum
 #'
-#' @param ui.n.arms Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm
-#' @param ui.type.of.outcome.data "continuous", "binary", or "survival"
-#' @param ui.time.to.event.trial.type,
-#' @param ui.time.to.event.non.inferiority.trial.margin,
-#' @param ui.subpopulation.1.size,
-#' @param ui.total.alpha,
-#' @param ui.max.size,
-#' @param ui.max.duration,
-#' @param ui.accrual.yearly.rate,
-#' @param ui.followup.length,
-#' @param ui.optimization.target,
-#' @param ui.time.to.event.censoring.rate,
-#' @param ui.mcid,
-#' @param ui.incorporate.precision.gain,
-#' @param ui.relative.efficiency,
-#' @param ui.max.stages,
-#' @param ui.sann,
-#' @param ui.include.designs.start.subpop.1,
-#' @param ui.population.parameters,
-#' @param ui.desired.power,
-#' @param ui.scenario.weights
-#' @param default.pct.of.max
-#' @param min.n.per.arm
-#' @param min.enrollment.period
-#' @param default.function.scale
-#' @param default.n.scale
-#' @param default.period.scale
-#' @param default.max.iterations
-#' @param default.n.simulations
-#' @param default.means.temperature
-#' @param default.survival.temperature
-#' @param default.evals.per.temp
-#' @param default.report.iteration
-#' @param default.power.penalty
-#' @param default.boundary.to.enroll
+#' @param ui.n.arms (the prefix 'ui' abbreviates 'user-input') Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm; the design classes that come with this package can handle 2 or 3 arms
+#' @param ui.type.of.outcome.data "continuous", "binary", or "time-to-event" (i.e., survival outcome)
+#' @param ui.time.to.event.trial.type "superiority" or "non-inferiority" trial type; only implemented for time-to-event outcomes
+#' @param ui.time.to.event.non.inferiority.trial.margin Non-inferiority margin; only relevant if outcome is time-to-event and trial type is non-inferiority. Represented as hazard ratio, required to be at least 1.
+#' @param ui.subpopulation.1.size Proportion of overall population in subpopulation 1. Must be between 0 and 1.
+#' @param ui.total.alpha Familywise Type I error rate (1-sided)
+#' @param ui.max.size Maximum allowed sample size
+#' @param ui.max.duration Maximum allowed trial duration in years
+#' @param ui.accrual.yearly.rate Number of participants enrolled per year; assumed constant throughout trial
+#' @param ui.followup.length Time from enrollment to measurement of primary outcome (only used for continuous or binary outcome types)
+#' @param ui.optimization.target Quantity being optimized (objective function); "size" represents expected sample size
+#' @param ui.time.to.event.censoring.rate probability that primary outcome is censored, assumed to be independent of the outcome and subpopulation; only implemented for time-to-event outcomes
+#' @param ui.mcid Minimum, Clinically Important Treatment Effect (as difference of population means for binary/continuous outcomes; as hazard ratio for time-to-event outcomes)
+#' @param ui.incorporate.precision.gain Incorporate into analysis a precision gain from adjustment for prognostic baseline variables; allowed values: TRUE or FALSE
+#' @param ui.relative.efficiency If ui.incorporate.precision.gain==TRUE, this specifies relative efficiency (number > 1), representing the assumed precision gain from adjustment for prognostic baseline variables.
+#' @param ui.max.stages Maximum number of stages allowed (currently not used by default classes of trial designs)
+#' @param ui.sann Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see default.max.iterations below
+#' @param ui.include.designs.start.subpop.1 Search over designs that allow only subpopulation 1 to be enrolled during stage 1; TRUE or FALSE
+#' @param ui.population.parameters Matrix encoding scenarios (data generating distributions) used to define power constraints and  objective function
+#' @param ui.desired.power Matrix encoding power requirements for each scenario
+#' @param ui.scenario.weights Matrix encoding weights used to define objective function
+#' @param min.n.per.arm Minimum sample size per arm allowed
+#' @param min.enrollment.period Minimum enrollment duration for trial
+#' @param default.function.scale Used by Simulated Annealing Optimization algorithm
+#' @param default.n.scale Used by Simulated Annealing Optimization algorithm
+#' @param default.period.scale Used by Simulated Annealing Optimization algorithm
+#' @param default.max.iterations Maximum Number of Different Designs to Search Over using Simluated Annealing optimization
+#' @param default.n.simulations Used by Simulated Annealing Optimization algorithm
+#' @param default.means.temperature Used by Simulated Annealing Optimization algorithm
+#' @param default.survival.temperature Used by Simulated Annealing Optimization algorithm
+#' @param default.evals.per.temp Used by Simulated Annealing Optimization algorithm
+#' @param default.report.iteration Used by Simulated Annealing Optimization algorithm
+#' @param default.power.penalty Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm
+#' @param default.boundary.to.enroll Starting Value used by Simulated Annealing Optimization algorithm for designs where option ui.include.designs.start.subpop.1=TRUE
 #' @return List of optimized designs
 #' @export
 #' @examples
@@ -87,7 +86,6 @@ optimize_designs <- function(
   ui.population.parameters,
   ui.desired.power,
   ui.scenario.weights,
-  default.pct.of.max =0.8, # Start at 80% of max sample size/enrollment period
   min.n.per.arm =25,       # For Continuous/Binary Outcomes
   min.enrollment.period =0.5,    # For Survival Outcomes
   default.function.scale =1,

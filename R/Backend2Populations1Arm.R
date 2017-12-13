@@ -1,5 +1,4 @@
-# Comparing a single treatment to control in two disjoint sub-populations
-# This R file creates the necessary backend files for the optimizer to call
+# Class of Adaptive Designs for Trials with 1 treatment arms and 1 control arm; 2 subpopulations that partition overall population.
 # There are three key functions
 # 1) construct.joint.distribution.of.test.statistics.OneTreatmentArm creates mean and covariance
 # matrices associated with the vector of statistics
@@ -11,8 +10,6 @@
 # of a stage k the vector of test statistics is given by
 # (Z_{1,k}, Z_{2,k}), where the first subscript
 # indicates treatment and the second stage.
-
-
 
 # This function calculates the covariate matrix for a binary and a continuous outcome
 # It assumes one treatments and
