@@ -60,7 +60,8 @@
 #'   ui.include.designs.start.subpop.1=FALSE,
 #'   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001, 1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,,dimnames=list(c(),c("lambda1_con","lambda2_con","lambda1_trt","lambda2_trt"))),
 #'   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3, byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
-#'   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight")))
+#'   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight"))),
+#'     default.max.iterations=2,
 #'   )
 #' @importFrom stats plogis
 #' @importFrom mvtnorm pmvnorm GenzBretz
@@ -92,7 +93,7 @@ optimize_designs <- function(
   default.function.scale =1,
   default.n.scale =100,
   default.period.scale =2,
-  default.max.iterations =2,
+  default.max.iterations =1000,
   default.n.simulations =1e4,
   default.means.temperature =100,
   default.survival.temperature =10,
