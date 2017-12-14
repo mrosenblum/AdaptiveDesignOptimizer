@@ -1,27 +1,29 @@
-# Class of Adaptive Designs for Trials with 2 treatment arms and 1 control arm; 2 subpopulations that partition overall population.
-# There are three key functions
-# 1) construct.joint.distribution.of.test.statistics.TwoTreatmentArms creates mean and covariance
+# Uses library(mvtnorm)
+
+# This R file creates the necessary backend files for the optimizer to call
+# There are three key functions 
+# 1) construct.joint.distribution.of.test.statistics.TwoTreatmentArms creates mean and covariance 
 # matrices associated with the vector of statistics
 # 2) get.eff.bound calculates the efficacy boundaries for the design
 # 3) design.evaluate for different vectors of test statistics calculates
 # which hypothesis are rejected and at which stage.
 
-# Throughout the sequence of test statistics is given by blocks of stages and within a block
-# of a stage k the vector of test statistics is given by
+# Throughout the sequence of test statistics is given by blocks of stages and within a block 
+# of a stage k the vector of test statistics is given by 
 # (Z_{1,1,k}, Z_{1,2,k}, Z_{2,1,k}, Z_{2,2,k}). Here, the first subscript
 # indicates treatment, the second sub-populaiton and the third stage.
 
 # This function calculates the covariate matrix for a binary and a continuous outcome
-# It assumes two treatments and
+# It assumes two treatments and 
 # a common control, two sub-populations, and arbitrary number of stages
-# prop.samp.vec.pop.1
+# prop.samp.vec.pop.1 
 # Inputs: var.vec.pop.1: variance vector for population 1
 #  var.vec.pop.2: variance vector for population 2
 #  prop.samp.vec.pop.1: the proportion of total number of subjects in sub-population one
-#  which are enrolled at each stage. E.g. c(0.5, 0.5) means 50 \% of the obs are enrolled
+#  which are enrolled at each stage. E.g. c(0.5, 0.5) means 50 \% of the obs are enrolled 
 #  at stage one and 50% at stage 2.
 #  prop.samp.vec.pop.1: the proportion of total number of subjects in sub-population one
-#  which are enrolled at each stage. E.g. c(0.5, 0.5) means 50 \% of the obs are enrolled
+#  which are enrolled at each stage. E.g. c(0.5, 0.5) means 50 \% of the obs are enrolled 
 #  at stage one and 50% at stage 2.
 
 # Output: The covariance matrix associated with the vector of test statistics
@@ -34,9 +36,9 @@ cov.mat.cont.bin.TwoTreatmentArms = function(var.vec.pop.1, var.vec.pop.2,
   cumsum.prop.samp.pop.1 = cumsum(prop.samp.vec.pop.1)
   cumsum.prop.samp.pop.2 = cumsum(prop.samp.vec.pop.2)
   cov.mat = matrix(0, nrow = 2 * 2 * K, ncol = 2 * 2 * K)
-
+  
   # Filling in the covariance matrix
-
+  
   # Filling in by blocks
   for(i in 1:K){
     for(j in 1:K){
@@ -66,8 +68,8 @@ cov.mat.cont.bin.TwoTreatmentArms = function(var.vec.pop.1, var.vec.pop.2,
 }
 
 
-# This function calculates the covariance matrix associatec with
-# a survival outcome.
+# This function calculates the covariance matrix associatec with 
+# a survival outcome. 
 # Input d.l.j, l = 0,1,2, and j = 1,2. Here, d.l.j is a vector of length
 # K where element k is the expected number of deaths at or before analysis
 # k in subpopulation j and treatment l.
@@ -92,20 +94,20 @@ cov.mat.surv.TwoTreatmentArms = function(d.0.1, d.1.1, d.2.1, d.0.2, d.1.2, d.2.
     cov.mat[(i-1) * 4 + 1, (j-1) * 4 + 3] = mean(min.max.term.pop.1.treatment.1, min.max.term.pop.1.treatment.2) * 0.5
       # Both treatment 1 and subpopulation 2 different stages
     cov.mat[(i-1) * 4 + 2, (j-1) * 4 + 2] = min.max.term.pop.2.treatment.1
-      # Different treatments and subpopulation 2 different stages
+      # Different treatments and subpopulation 2 different stages      
     cov.mat[(i-1) * 4 + 2, (j-1) * 4 + 4] = mean(min.max.term.pop.2.treatment.1, min.max.term.pop.2.treatment.2) * 0.5
-      # Different treatments and subpopulation 1 different stages
+      # Different treatments and subpopulation 1 different stages      
     cov.mat[(i-1) * 4 + 3, (j-1) * 4 + 1] = mean(min.max.term.pop.1.treatment.1, min.max.term.pop.1.treatment.2) * 0.5
-      # Same treatment 2 and subpopulation 1 different stages
+      # Same treatment 2 and subpopulation 1 different stages      
     cov.mat[(i-1) * 4 + 3, (j-1) * 4 + 3] = min.max.term.pop.1.treatment.2
-      # Different treatments 1 and subpopulation 2 different stages
+      # Different treatments 1 and subpopulation 2 different stages      
     cov.mat[(i-1) * 4 + 4, (j-1) * 4 + 2] =  mean(min.max.term.pop.2.treatment.1, min.max.term.pop.2.treatment.2) * 0.5
-      # Same treatment 2 and subpopulation 2 different stages
+      # Same treatment 2 and subpopulation 2 different stages      
     cov.mat[(i-1) * 4 + 4, (j-1) * 4 + 4] = min.max.term.pop.2.treatment.2
   }
 }
-# Throughout the sequence of test statistics is given by blocks of stages
-# and within a block  of a stage k the vector of test statistics is given by
+# Throughout the sequence of test statistics is given by blocks of stages 
+# and within a block  of a stage k the vector of test statistics is given by 
 # (Z_{1,1,k}, Z_{1,2,k}, Z_{2,1,k}, Z_{2,2,k}), where the first subscript
 # indicates treatment, the second sub-populaiton and the third stage.
 
@@ -113,7 +115,7 @@ return(cov.mat)
 }
 
 
-# This function creates the covariance matrix and mean vector
+# This function creates the covariance matrix and mean vector 
 # associated with the test statistic
 # Inputs: #   analytic.n.per.stage - [K x J(L+1)] matrix: patients with primary outcome
 #             at each interim analysis.
@@ -123,20 +125,20 @@ return(cov.mat)
 #             stage k: T0S1 T0S2 ... T0SJ ... TLS1 TLS2 ... TLSJ
 #         outcome.type: type of outcome, one of continuous, binary or survival
 #         mean.sub.pop.1: the assumed means assocated with each treatment in sub-population 1
-#         the mean vector is input in the order (control, treatment 1, treatment 2)
+#         the mean vector is input in the order (control, treatment 1, treatment 2) 
 #         mean.sub.pop.2: the assumed means assocated with each treatment in sub-population 1
-#         the mean vector is input in the order (control, treatment 1, treatment 2)
+#         the mean vector is input in the order (control, treatment 1, treatment 2) 
 #         var.vec.pop.1: the variance vector associated with each treatment in sub-population one
-#         var.vec.pop.2: the variance vector associated with each treatment in sub-population two
+#         var.vec.pop.2: the variance vector associated with each treatment in sub-population two 
 #         prop.pop.1: The proportion of subjects in population one. Assumed known.
 #         max.follow: For survival outcome, how long each participant is followed up
 #         enrollment.period: For survival outcome, the maximum time participants are enrolled
-#         hazard.rate.pop.1: For survival outcome, hazard rate for subpopulation 1 in
+#         hazard.rate.pop.1: For survival outcome, hazard rate for subpopulation 1 in 
 #         the order (control, treatment 1, treatment 2)
-#         hazard.rate.pop.2: For survival outcome, hazard rate for subpopulation 2 in
+#         hazard.rate.pop.2: For survival outcome, hazard rate for subpopulation 2 in 
 #         the order (control, treatment 1, treatment 2)
 #         time: for time-to-event outcome, time is the timing of all analysis.
-#         relative.efficiency: ratio of the asymptotic variance of unadjusted estimator to
+#         relative.efficiency: ratio of the asymptotic variance of unadjusted estimator to 
 #         asymptotic variance of adjusted estimator.
 #         censoring.rate: For a survival outcome only. It is the proportion of participants that are not
 #         administratively censored which drop out of the study. For example, if 100 events are expected
@@ -147,9 +149,9 @@ return(cov.mat)
 # Output: A list with three elements:
 #         cov.mat.used: Covariance matrix associated with test statistic.
 #         non.centrality.parameter.vec = The mean vector associated with each test statistic.
-#         information.vector =  for a given stage k, elements [(1+ (k-1) * 4):(4 + (k-1) * 4)] are
+#         information.vector =  for a given stage k, elements [(1+ (k-1) * 4):(4 + (k-1) * 4)] are 
 #         (var(\beta_{1,1,k}, var(\beta_{1,2,k}), var(\beta_{2,1,k}), var(beta_{2,2,k}) where the
-#         first subscript indicates treatment, the second sub-population and the third stage.
+#         first subscript indicates treatment, the second sub-population and the third stage. 
 #         beta is the estimator of the treatment effect
 
 construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(analytic.n.per.stage,
@@ -168,27 +170,27 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
   relative.efficiency = NULL){
   # Number of stages
   K <- nrow(analytic.n.per.stage)
-
+  
   # Calculating the total number of subjects at each analysis for both sub-populations
   # Note: We assume that an equal number is enrolled to treatment and control.
   n.pop.1 = analytic.n.per.stage[, 1]
   n.pop.2 = analytic.n.per.stage[, 2]
-
+  
   # Calculating the proportion of observation sampled at each stage for the
   # Two treatments
   prop.samp.vec.pop.1 = diff(c(0, n.pop.1))/n.pop.1[K]
   prop.samp.vec.pop.2 = diff(c(0, n.pop.2))/n.pop.2[K]
-
-
+  
+  
   # Creating storage space for mean vector
   mean.vec = rep(NA, 4 * K)
-
+  
   # Do the calculations seperately depending on the type of outcome
   if(outcome.type == "continuous"){
     for(i in 1:K){
-      mean.vec[((i-1)*4+1):((i-1)*4+4)] =
+      mean.vec[((i-1)*4+1):((i-1)*4+4)] = 
       c(sqrt(n.pop.1[i])*(mean.sub.pop.1[2]-mean.sub.pop.1[1])/
-        sqrt(var.vec.pop.1[2]+var.vec.pop.1[1]),
+        sqrt(var.vec.pop.1[2]+var.vec.pop.1[1]), 
         sqrt(n.pop.2[i])*(mean.sub.pop.2[2] - mean.sub.pop.2[1])/
         sqrt(var.vec.pop.2[2]+var.vec.pop.2[1]),
         sqrt(n.pop.1[i])*(mean.sub.pop.1[3] - mean.sub.pop.1[1])/
@@ -201,7 +203,7 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
       prop.samp.vec.pop.1,
       prop.samp.vec.pop.2)
   }
-
+  
   if(outcome.type == "binary"){
     var.vec.pop.1 = mean.sub.pop.1*(1 - mean.sub.pop.1)
     var.vec.pop.2 = mean.sub.pop.2*(1 - mean.sub.pop.2)
@@ -221,7 +223,7 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
       prop.samp.vec.pop.1,
       prop.samp.vec.pop.2)
   }
-
+  
 
   if(outcome.type == "survival"){
 
@@ -240,7 +242,7 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
 
     for(i in 1:K){
 
-    # Calculating the expected number of deaths for each treatment + sub-population combination
+    # Calculating the expected number of deaths for each treatment + sub-population combination 
     # at interim analys i
 
     # We cycle through the 6 different cases
@@ -252,7 +254,7 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
        d.1.2[i] = (time[i] - max.follow)/time[i] * (1 - exp(-hazard.rate.pop.2[2] * max.follow)) + max.follow/time[i] * (1 - (1-exp(-hazard.rate.pop.2[2] * max.follow))/(max.follow * hazard.rate.pop.2[2]))
        d.2.2[i] = (time[i] - max.follow)/time[i] * (1 - exp(-hazard.rate.pop.2[3] * max.follow)) + max.follow/time[i] * (1 - (1-exp(-hazard.rate.pop.2[3] * max.follow))/(max.follow * hazard.rate.pop.2[3]))
      }
-
+     
      if(enrollment.period >= max.follow & max.follow >= time[i]){
        d.0.1[i] = 1 - (1-exp(-hazard.rate.pop.1[1] * time[i]))/(time[i] * hazard.rate.pop.1[1])
        d.1.1[i] = 1 - (1-exp(-hazard.rate.pop.1[2] * time[i]))/(time[i] * hazard.rate.pop.1[2])
@@ -309,31 +311,31 @@ construct.joint.distribution.of.test.statistics.TwoTreatmentArms <- function(ana
     # Calculating the information and covariance matrix
      mean.vec[((i-1) * 4 + 1):((i-1) * 4 + 4)] = theta * sqrt(c((d.0.1[i] + d.1.1[i])/4, (d.0.2[i] + d.1.2[i])/4, (d.0.1[i] + d.2.1[i])/4, (d.0.2[i] + d.2.2[i])/4))
    }
-
+   
    cov.mat.used = cov.mat.surv.TwoTreatmentArms(d.0.1, d.1.1, d.2.1, d.0.2, d.1.2, d.2.2)
  }
 
 
 # Create information vector on the extimator scale
-# for a given stage k elements [(1+ (k-1) * 4):(4 + (k-1) * 4)] are
+# for a given stage k elements [(1+ (k-1) * 4):(4 + (k-1) * 4)] are 
 # (var(\beta_{1,1,k}, var(\beta_{1,2,k}), var(\beta_{2,1,k}), var(beta_{2,2,k})
 #, where the first subscript indicates treatment, the second sub-populaiton and the third stage.
 
-# For a continuous outcome
+# For a continuous outcome 
  if(outcome.type == "continuous"){
 # Initialize the vector
   information.vector.inv = rep(NA, 4 * K)
 
   for(i in 1:K){
-    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] =
-    c(1/n.pop.1[i] * (var.vec.pop.1[2]+var.vec.pop.1[1]),
+    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] = 
+    c(1/n.pop.1[i] * (var.vec.pop.1[2]+var.vec.pop.1[1]), 
       1/n.pop.2[i] * (var.vec.pop.2[2]+var.vec.pop.2[1]),
       1/n.pop.1[i] * (var.vec.pop.1[3]+var.vec.pop.1[1]),
       1/n.pop.2[i] * (var.vec.pop.2[3]+var.vec.pop.2[1]))
   }
 } # End if outcome.type is continuous
 
-# For a binary outcome
+# For a binary outcome 
 if(outcome.type == "binary"){
 # Initialize the vector
   information.vector.inv = rep(NA, 4 * K)
@@ -342,8 +344,8 @@ if(outcome.type == "binary"){
   var.vec.pop.2 = mean.sub.pop.2*(1 - mean.sub.pop.2)
 
   for(i in 1:K){
-    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] =
-    c(1/n.pop.1[i] * (var.vec.pop.1[2]+var.vec.pop.1[1]),
+    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] = 
+    c(1/n.pop.1[i] * (var.vec.pop.1[2]+var.vec.pop.1[1]), 
       1/n.pop.2[i] * (var.vec.pop.2[2]+var.vec.pop.2[1]),
       1/n.pop.1[i] * (var.vec.pop.1[3]+var.vec.pop.1[1]),
       1/n.pop.2[i] * (var.vec.pop.2[3]+var.vec.pop.2[1]))
@@ -356,8 +358,8 @@ if(outcome.type == "survival"){
   information.vector.inv = rep(NA, 4 * K)
 
   for(i in 1:K){
-    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] =
-    c(4/((d.0.1[i] + d.1.1[i])),
+    information.vector.inv[((i-1)*4+1):((i-1)*4+4)] = 
+    c(4/((d.0.1[i] + d.1.1[i])), 
       4/((d.0.2[i] + d.1.2[i])),
       4/((d.0.1[i] + d.2.1[i])),
       4/((d.0.2[i] + d.2.2[i])))
@@ -398,14 +400,14 @@ return(list(cov.mat.used=cov.mat.used,
 
 
 get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.tol = 10^-3){
-
+  
   # Number of stages
   K = length(alpha.allocation)/2
-
-  # Getting index corresponding to which sup-population is being used in each
+  
+  # Getting index corresponding to which sup-population is being used in each 
   # alpha allocation
   index.sub.pop = rep(c(1, 2), K)
-
+  
   # eff.bound is the vector of efficacy boundaries with the elements corresponding to the
   # same stage and subpopulation combinations as in the alpha.allocation vector
   eff.bound = rep(NA, 2 * K)
@@ -414,8 +416,8 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
   # Cumulative alpha allocation with subpopulation 1 and 2
   cum.alpha.1 = cumsum(alpha.allocation[which(index.sub.pop == 1)])
   cum.alpha.2 = cumsum(alpha.allocation[which(index.sub.pop == 2)])
-
-  # Calculating the first elements of the efficacy boundary u_{j,1} corresponding to each
+  
+  # Calculating the first elements of the efficacy boundary u_{j,1} corresponding to each 
   # subpopulation
   temp.1 = rmvnorm(10^6, mean = rep(0, 2), sigma = cov.mat.used[1:4, 1:4][c(1,3), c(1,3)])
   temp.2 = rmvnorm(10^6, mean = rep(0, 2), sigma = cov.mat.used[1:4, 1:4][c(2,4), c(2,4)])
@@ -423,57 +425,57 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
   temp.2.max = apply(temp.2, 1, max)
   eff.bound[1] = quantile(temp.1.max, 1-alpha.allocation[1])
   eff.bound[2] = quantile(temp.2.max, 1-alpha.allocation[2])
-
-  # Calculating the first elements of the efficacy boundary z_{j,1}
+  
+  # Calculating the first elements of the efficacy boundary z_{j,1} 
   eff.bound.z[1] = qnorm(1-alpha.allocation[1])
-  eff.bound.z[2] = qnorm(1-alpha.allocation[2])
+  eff.bound.z[2] = qnorm(1-alpha.allocation[2]) 
 
 
-  # A function that calculates the cumulative type one error corresponding
+  # A function that calculates the cumulative type one error corresponding 
   # to a sub-population j
   # effecacy boundaries is the efficacy boundary
   # cov.mat.used is the covariance matrix
   # j is the subpopulation
   sign.lev = function(eff.bound.used, cov.mat.used, sub.pop.numb){
-
+    
     numb.stages = length(eff.bound.used)
-
+    
     # Index which test-statistic belongs to population and treatment, respectivly
     index.sub.pop.eff = rep(c(1, 2), 2 * numb.stages)
     index.treatment.eff = rep(c(1,1, 2,2), numb.stages)
-
-
+    
+    
     cov.mat.eff.bound =
     cov.mat.used[1:(4* numb.stages), 1:(4* numb.stages)][which(index.sub.pop.eff == sub.pop.numb), which(index.sub.pop.eff == sub.pop.numb)]
     # Calculating the overall type one error under the global null
     type.1.err = 1- pmvnorm(mean = rep(0, 2 * numb.stages), sigma= cov.mat.eff.bound,lower = rep(-Inf, 2 * numb.stages), upper= rep(eff.bound.used, each = 2), algorithm=GenzBretz(abseps = 0.000000001,maxpts=100000))[1]
-
+    
     return(type.1.err)
   }
 
   sign.lev.z = function(eff.bound.used, cov.mat.used, sub.pop.numb){
-
+    
     numb.stages = length(eff.bound.used)
-
+    
     # Index which test-statistic belongs to population and treatment, respectivly
     index.sub.pop.eff = rep(c(1, 2), 2 * numb.stages)
 
     # Getting the treatment assignment
     index.treatment.eff = rep(c(1,1,2,2), numb.stages)
-
+    
     # Only use treatment 1 and subpopulation of interest
     index.used = which(index.treatment.eff == 1 & index.sub.pop.eff == sub.pop.numb)
-
+    
     cov.mat.eff.bound = cov.mat.used[index.used, index.used]
 
-   # Calculating the overall type one error
+   # Calculating the overall type one error 
     type.1.err = 1- pmvnorm(mean = rep(0, numb.stages), sigma= cov.mat.eff.bound,lower = rep(-Inf, numb.stages), upper= eff.bound.used, algorithm=GenzBretz(abseps = 0.000000001,maxpts=100000))[1]
-
+    
     return(type.1.err)
   }
 
-
-
+  
+  
   # Start calculating the efficacy boundaries associated with population 1
   # Cycling through the stages after and calculating the efficacy boundary u_{1,k} for k = 2, \ldots, K
   if(K > 1){
@@ -484,15 +486,15 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       upper = 20
       lower = -20
       length.int = upper - lower
-
+      
       # Initial guess
       upper.bound.term = mean(c(upper, lower))
       eff.bound.j = eff.bound[index.sub.pop == 1]
-
+      
       while(length.int > err.tol){
         eff.bound.j[i] = upper.bound.term
         alpha.used = sign.lev(eff.bound.j[1:i], cov.mat.used, 1)
-
+        
         if(alpha.used < cum.alpha.1[i]){
           upper = upper.bound.term
           upper.bound.term = mean(c(upper.bound.term, lower))
@@ -503,7 +505,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
         }
         length.int = upper - lower
       }
-
+      
       # "Rounding" up to preserve type 1 error
       upper.bound.term = upper.bound.term + length.int
       eff.bound[(i-1)*2 + 1] = upper.bound.term
@@ -514,15 +516,15 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       upper = 20
       lower = -20
       length.int = upper - lower
-
+      
       # Initial guess
       upper.bound.term = mean(c(upper, lower))
       eff.bound.j = eff.bound.z[index.sub.pop == 1]
-
+      
       while(length.int > err.tol){
         eff.bound.j[i] = upper.bound.term
         alpha.used = sign.lev.z(eff.bound.j[1:i], cov.mat.used, 1)
-
+        
         if(alpha.used < cum.alpha.1[i]){
           upper = upper.bound.term
           upper.bound.term = mean(c(upper.bound.term, lower))
@@ -533,29 +535,29 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
         }
         length.int = upper - lower
       }
-
+      
       # "Rounding" up to preserve type 1 error
       upper.bound.term = upper.bound.term + length.int
       eff.bound.z[(i-1)*2 + 1] = upper.bound.term
     }
-
+    
     # Calculate the efficacy boundaries associated with population 2
-    # Cycling through the stages and calculating the efficacy boundary
+    # Cycling through the stages and calculating the efficacy boundary 
     # u_{2,k}, z_{2,k} for k = 1, \ldots, K
     for(i in 2:K){
       # upper and lower values of interval
       upper = 20
       lower = -20
       length.int = upper - lower
-
+      
       # Initial guess
       upper.bound.term = mean(c(upper, lower))
       eff.bound.j = eff.bound[index.sub.pop == 2]
-
+      
       while(length.int > err.tol){
         eff.bound.j[i] = upper.bound.term
         alpha.used = sign.lev(eff.bound.j[1:i], cov.mat.used, 2)
-
+        
         if(alpha.used < cum.alpha.2[i]){
           upper = upper.bound.term
           upper.bound.term = mean(c(upper.bound.term, lower))
@@ -566,7 +568,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
         }
         length.int = upper - lower
       }
-
+      
       # "Rounding" up to preserve type 1 error
       upper.bound.term = upper.bound.term + length.int
       eff.bound[(i-1)*2 + 2] = upper.bound.term
@@ -577,15 +579,15 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       upper = 20
       lower = -20
       length.int = upper - lower
-
+      
       # Initial guess
       upper.bound.term = mean(c(upper, lower))
       eff.bound.j = eff.bound.z[index.sub.pop == 2]
-
+      
       while(length.int > err.tol){
         eff.bound.j[i] = upper.bound.term
         alpha.used = sign.lev.z(eff.bound.j[1:i], cov.mat.used, 2)
-
+        
         if(alpha.used < cum.alpha.2[i]){
           upper = upper.bound.term
           upper.bound.term = mean(c(upper.bound.term, lower))
@@ -596,7 +598,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
         }
         length.int = upper - lower
       }
-
+      
       # "Rounding" up to preserve type 1 error
       upper.bound.term = upper.bound.term + length.int
       eff.bound.z[(i-1)*2 + 2] = upper.bound.term
@@ -604,18 +606,18 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
   } # End if K >1 statement
 
   # efficacy boundaries associated with alphar reallocation
-  # eff.bound.alpha[2*(k-1) +1] is \tilde u_{1,K} if both H_0 in subpopulation two
+  # eff.bound.alpha[2*(k-1) +1] is \tilde u_{1,K} if both H_0 in subpopulation two 
   # are rejected at stage k
-  # eff.bound.alpha[2*k] is \tilde u_{2,K} if both H_0 in subpopulation one
+  # eff.bound.alpha[2*k] is \tilde u_{2,K} if both H_0 in subpopulation one 
   # are rejected at stage k
-  # eff.bound.z.alpha[2*(k-1) +1] is \tilde z_{1,K} if both H_0 in subpopulation two
+  # eff.bound.z.alpha[2*(k-1) +1] is \tilde z_{1,K} if both H_0 in subpopulation two 
   # are rejected at stage k
-  # eff.bound.alpha[2*k] is \tilde z_{2,K} if both H_0 in subpopulation one
+  # eff.bound.alpha[2*k] is \tilde z_{2,K} if both H_0 in subpopulation one 
   # are rejected at stage k
 
   eff.bound.alpha = rep(NA, 2 * K)
   eff.bound.z.alpha = rep(NA, 2 * K)
-
+  
   for(k in 1:K){
   # Start with sub-population 1
   # Now we calculate the efficacy boundaries for pop 1 if both null hypothesis corresponding to
@@ -626,14 +628,14 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
     upper = 20
     lower = -20
     length.int = upper - lower
-
+    
       # Initial guess
     upper.bound.term = mean(c(upper, lower))
     eff.bound.j = eff.bound[index.sub.pop == 1]
       # The cumulative alpha level that the last stage is allowed to test at (note not \alpha_{1,K})
       # \sum_{j=1}^K \alpha_{1,j} + \sum_{j=k}^K \alpha_{2,j}
     alpha.allowed = cum.alpha.1[K] + (cum.alpha.2[K] - c(0,cum.alpha.2)[k])
-
+    
     while(length.int > err.tol){
       eff.bound.j[K] = upper.bound.term
       alpha.used = sign.lev(eff.bound.j, cov.mat.used, 1)
@@ -648,7 +650,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       }
       length.int = upper - lower
     }
-
+    
       # "Rounding" up to preserve type 1 error
     upper.bound.term = upper.bound.term + length.int
     eff.bound.alpha[(k-1) * 2 + 1] = upper.bound.term
@@ -658,14 +660,14 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
     upper = 20
     lower = -20
     length.int = upper - lower
-
+    
       # Initial guess
     upper.bound.term = mean(c(upper, lower))
     eff.bound.j = eff.bound.z[index.sub.pop == 1]
       # The alpha level that the last stage is allowed to test at
       # \alpha_{1,K} + \sum_{j=k}^K \alpha_{2,j}
     alpha.allowed = cum.alpha.1[K] + (cum.alpha.2[K] - c(0,cum.alpha.2)[k])
-
+    
     while(length.int > err.tol){
       eff.bound.j[K] = upper.bound.term
       alpha.used = sign.lev.z(eff.bound.j, cov.mat.used, 1)
@@ -680,7 +682,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       }
       length.int = upper - lower
     }
-
+    
       # "Rounding" up to preserve type 1 error
     upper.bound.term = upper.bound.term + length.int
     eff.bound.z.alpha[(k-1)*2 + 1] = upper.bound.term
@@ -694,14 +696,14 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
     upper = 20
     lower = -20
     length.int = upper - lower
-
+    
       # Initial guess
     upper.bound.term = mean(c(upper, lower))
     eff.bound.j = eff.bound[index.sub.pop == 2]
       # The alpha level that the last stage is allowed to test at
       # \alpha_{1,K} + \sum_{j=k}^K \alpha_{2,j}
     alpha.allowed = cum.alpha.2[K] + (cum.alpha.1[K] - c(0,cum.alpha.1)[k])
-
+    
     while(length.int > err.tol){
       eff.bound.j[K] = upper.bound.term
       alpha.used = sign.lev(eff.bound.j, cov.mat.used, 2)
@@ -716,7 +718,7 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       }
       length.int = upper - lower
     }
-
+    
       # "Rounding" up to preserve type 1 error
     upper.bound.term = upper.bound.term + length.int
     eff.bound.alpha[k*2] = upper.bound.term
@@ -726,14 +728,14 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
     upper = 20
     lower = -20
     length.int = upper - lower
-
+    
       # Initial guess
     upper.bound.term = mean(c(upper, lower))
     eff.bound.j = eff.bound.z[index.sub.pop == 2]
       # The alpha level that the last stage is allowed to test at
       # \alpha_{1,K} + \sum_{j=k}^K \alpha_{2,j}
     alpha.allowed = cum.alpha.2[K] + (cum.alpha.1[K] - c(0,cum.alpha.1)[k])
-
+    
     while(length.int > err.tol){
       eff.bound.j[K] = upper.bound.term
       alpha.used = sign.lev.z(eff.bound.j, cov.mat.used, 2)
@@ -748,12 +750,12 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
       }
       length.int = upper - lower
     }
-
+    
       # "Rounding" up to preserve type 1 error
     upper.bound.term = upper.bound.term + length.int
     eff.bound.z.alpha[k*2] = upper.bound.term
   } # end for k loop
-
+  
   # Make sure that eff.bound >= eff.bound.z
   eff.bound = pmax(eff.bound.z, eff.bound)
   eff.bound.alpha = pmax(eff.bound.z.alpha, eff.bound.alpha)
@@ -772,8 +774,8 @@ get.eff.bound.TwoTreatmentArms = function(alpha.allocation, cov.mat.used, err.to
 #         alpha.allocation: The alpha allocation to each stage
 
 # Output: A list consisting of three elements. The first one is a matrix of dim
-#         n.sim times 4 where each column corresponds to if H_0 is rejected where the
-#         hypothesis are in the same order as in the covariance matrix. One means rejected
+#         n.sim times 4 where each column corresponds to if H_0 is rejected where the 
+#         hypothesis are in the same order as in the covariance matrix. One means rejected 
 #         and zero means not rejected.
 #         The second element is of the same nature as the first element where
 #         each column indicates at what stage the decision to reject or not reject
@@ -783,13 +785,13 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
   efficacy.boundary,
   futility.boundary,
   alpha.allocation){
-
+  
   # Number of stages
   K = length(alpha.allocation)/2
-
+  
   # Number of MC evaluations
   n.sim <- nrow(test.statistics)
-
+  
   # u_{j,k} boundaries
   est.eff.bound= efficacy.boundary$eff.bound
   # The alpha re-allocated u_{j,k}
@@ -798,19 +800,19 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
   est.eff.bound.z= efficacy.boundary$eff.bound.z
   # The alpha re-allocated u_{j,k}
   est.eff.bound.alpha.z = efficacy.boundary$eff.bound.z.alpha
-
+  
   # Going through each hypothesis being tested finding out if rejected or not
   # and when rejected/stopped
-
+  
   reject.hyp = matrix(0, nrow = n.sim, ncol = 4)
   stage.decision = matrix(NA, nrow = n.sim, ncol = 4)
-
+  
   for(i in 1:n.sim){
     # Start by looking at subpopulation 1
     index.sub.pop = rep(c(1, 2), 2 * K)
     index.stage = rep(1:K, each = 4)
     is.rejected = FALSE
-
+    
     # Looking at sub-population one at stage one
     index.used = which(index.sub.pop == 1 & index.stage == 1)
     if(max(test.statistics[i, index.used]) > est.eff.bound[index.used[1]]){
@@ -818,78 +820,78 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
       is.rejected = TRUE
       stage.decision[i, c(1,3)[which.max(test.statistics[i, index.used])]] = 1
     }
-
+    
     # If the max test is rejected continue onto the min test
     if(is.rejected & min(test.statistics[i, index.used]) > est.eff.bound.z[1]){
       reject.hyp[i, c(1,3)[which.min(test.statistics[i, index.used])]] = 1
       stage.decision[i, c(1,3)[which.min(test.statistics[i, index.used])]] = 1
     }
-
+    
     # Testing for futility at stage one in sub-population one
     # Finding the treatments that should be stopped for futility
     stage.decision[i, index.used[which(test.statistics[i, index.used] <= futility.boundary[index.used] & reject.hyp[i, index.used] != 1)]] <- 1
-
-
+    
+    
     # Sub-population 2
     index.used = which(index.sub.pop == 2 & index.stage == 1)
     is.rejected = FALSE
-
+    
     if(max(test.statistics[i, index.used]) > est.eff.bound[index.used[1]]){
       reject.hyp[i, index.used[which.max(test.statistics[i, index.used])] ] = 1
       is.rejected = TRUE
       stage.decision[i, index.used[which.max(test.statistics[i, index.used])]] = 1
     }
-
+    
     # If the max test is rejected continue onto the next stage
     if(is.rejected & min(test.statistics[i, index.used]) > est.eff.bound.z[2]){
       reject.hyp[i, index.used[which.min(test.statistics[i, index.used])]] = 1
       stage.decision[i, index.used[which.min(test.statistics[i, index.used])]] = 1
     }
-
+    
     # Testing for futility at stage one in sub-population two
     # Finding the treatments that should be stopped for futility
     stage.decision[i, index.used[which(test.statistics[i, index.used] <= futility.boundary[index.used] & reject.hyp[i, index.used] != 1)]] <- 1
-
-
+    
+    
     # Cycling through the stages
     if(K>1){
       for(k in 2:K){
-
+        
         # Start by sub-population one
         # Look if already stopped at last stage
         index.used = which(index.sub.pop == 1 & index.stage == k)
-
+        
         # Finding which treatments in sub-population one continued onto
-        # stage k
+        # stage k 
         which.at.stage = which(is.na(stage.decision[i, c(1,3)]))
         is.rejected = FALSE
-        # If both continue onto second stage
+        # If both continue onto second stage 
         if(length(which.at.stage) == 2){
           if(max(test.statistics[i, index.used]) > est.eff.bound[2 * (k-1) + 1]){
             reject.hyp[i, c(1,3)[which.max(test.statistics[i, index.used])]] = 1
             is.rejected = TRUE
             stage.decision[i, c(1,3)[which.max(test.statistics[i, index.used])]] = k
           }
-
+          
           # If the max test is rejected continue onto test the the other hypothesis
           if(is.rejected & min(test.statistics[i, index.used]) > est.eff.bound.z[2 * (k-1) + 1]){
             reject.hyp[i, c(1,3)[which.min(test.statistics[i, index.used])]] = 1
             stage.decision[i, c(1,3)[which.min(test.statistics[i, index.used])]] = k
           }
         }
-
-        # If only one continues onto second stage
+        
+        # If only one continues onto second stage 
         if(length(which.at.stage) == 1){
           # Finding the other one
           not.at.stage = setdiff(1:2, which.at.stage)
-
+          
           # If the other one stopped for futility at earlier stages
           if(reject.hyp[i, c(1,3)[not.at.stage]] == 0)
             if(test.statistics[i, index.used[which.at.stage]] > est.eff.bound[2 * (k-1) + 1]){
               reject.hyp[i, c(1,3)[which.at.stage]] = 1
               stage.decision[i, c(1,3)[which.at.stage]] = k
             }
-
+            
           # If the other one stopped for efficacy at earlier stages use the step down procedure
             if(reject.hyp[i, c(1,3)[not.at.stage]] == 1)
               if(test.statistics[i, index.used[which.at.stage]] >  est.eff.bound.z[2 * (k-1) + 1]){
@@ -897,43 +899,43 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
                 stage.decision[i, c(1,3)[which.at.stage]] = k
               }
             }
-
+            
         # Sub-population 2
         # Look if already stopped at last stage
             index.used = which(index.sub.pop == 2 & index.stage == k)
             is.rejected = FALSE
-
+            
         # Finding which treatments in sub-population one continued onto
-        # stage k
+        # stage k 
             which.at.stage = which(is.na(stage.decision[i, c(2,4)]))
-
-        # If both continue onto second stage
+            
+        # If both continue onto second stage 
             if(length(which.at.stage) == 2){
               if(max(test.statistics[i, index.used]) > est.eff.bound[2 * (k-1) + 2]){
                 reject.hyp[i, c(2,4)[which.max(test.statistics[i, index.used])]] = 1
                 is.rejected = TRUE
                 stage.decision[i,  c(2,4)[which.max(test.statistics[i, index.used])]] = k
               }
-
+              
           # If the max test is rejected continue onto the next test
               if(is.rejected & min(test.statistics[i, index.used]) > est.eff.bound.z[2 * (k-1) + 2]){
                 reject.hyp[i,  c(2,4)[which.min(test.statistics[i, index.used])]] = 1
                 stage.decision[i,  c(2,4)[which.min(test.statistics[i, index.used])]] = k
               }
             }
-
-        # If only one continues onto second stage
+            
+        # If only one continues onto second stage 
             if(length(which.at.stage) == 1){
           # Finding the other one
               not.at.stage = setdiff(1:2, which.at.stage)
-
+              
           # If the other one stopped for futility at earlier stages
               if(reject.hyp[i, c(2,4)[not.at.stage]] == 0)
                 if(test.statistics[i, index.used[which.at.stage]] > est.eff.bound[2 * (k-1) + 2]){
                   reject.hyp[i, c(2,4)[which.at.stage]] = 1
                   stage.decision[i, c(2,4)[which.at.stage]] = k
                 }
-
+                
           # If the other one stopped for efficacy at earlier stages use the step down procedure
                 if(reject.hyp[c(2,4)[not.at.stage]] == 1)
                   if(test.statistics[i, index.used[which.at.stage]] >  est.eff.bound.z[2 * (k-1) + 2]){
@@ -941,12 +943,12 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
                     stage.decision[i, c(2,4)[which.at.stage]] = k
                   }
                 }
-
+                
               } # end k loop
             } else {
               k=1
             }
-
+            
     # All H_0 not already stopped for efficacy or futility for futility at stage K
             stage.decision[i, which(is.na(stage.decision[i, ]))] = K
           }
@@ -983,7 +985,7 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
           # if the other treatment was stopped for efficacy
                   if(reject.hyp[i, c(1,3)[which.stopped]] ==  1){
                     index.used = which(index.sub.pop == 1 & index.stage == K)[which.enrolled]
-              # Doing test for efficacy
+              # Doing test for efficacy 
                     if(test.statistics[i, index.used] > est.eff.bound.alpha.z[1]){
                       reject.hyp[i, c(1,3)[which.enrolled]] = 1
                     }
@@ -992,7 +994,7 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
           # if the other treatment was stopped for futility
                   if(reject.hyp[i, c(1,3)[which.stopped]] ==  0){
                     index.used = which(index.sub.pop == 1 & index.stage == K)[which.enrolled]
-              # Doing test for efficacy
+              # Doing test for efficacy 
                     if(test.statistics[i, index.used] > est.eff.bound.alpha[1]){
                       reject.hyp[i, c(1,3)[which.enrolled]] = 1
                     }
@@ -1026,7 +1028,7 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
           # if the other treatment was stopped for efficacy
                   if(reject.hyp[i, c(2,4)[which.stopped]] ==  1){
                     index.used = which(index.sub.pop == 2 & index.stage == K)[which.enrolled]
-              # Doing test for efficacy
+              # Doing test for efficacy 
                     if(test.statistics[i, index.used] > est.eff.bound.alpha.z[2]){
                       reject.hyp[i, c(2,4)[which.enrolled]] = 1
                     }
@@ -1035,7 +1037,7 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
           # if the other treatment was stopped for futility
                   if(reject.hyp[i, c(2,4)[which.stopped]] ==  0){
                     index.used = which(index.sub.pop == 2 & index.stage == K)[which.enrolled]
-              # Doing test for efficacy
+              # Doing test for efficacy 
                     if(test.statistics[i, index.used] > est.eff.bound.alpha[2]){
                       reject.hyp[i, c(2,4)[which.enrolled]] = 1
                     }
@@ -1047,7 +1049,7 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
 
             } # end for k loop
           } # end for i loop
-
+          
           colnames(reject.hyp) = c("A1", "A2", "B1", "B2")
           colnames(stage.decision) = c("A1", "A2", "B1", "B2")
 
