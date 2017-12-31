@@ -1,5 +1,5 @@
-#' Streamlined Design Optimization Pipeline
-#' Authors: Josh Betz (jbetz@jhu.edu) and Michael Rosenblum
+#' Adaptive Enrichment Design Optimization Using Simulated Annealing
+#' Authors: Josh Betz (jbetz@jhu.edu), Tianchen Qian, Michael Rosenblum
 #'
 #' @param ui.n.arms (the prefix 'ui' abbreviates 'user-input') Number of Arms (including control arm), e.g., 2 arms means one treatment arm and one control arm; the design classes that come with this package can handle 2 or 3 arms
 #' @param ui.type.of.outcome.data "continuous", "binary", or "time-to-event" (i.e., survival outcome)
@@ -34,10 +34,41 @@
 #' @param simulated.annealing.parameter.evals.per.temp Used by Simulated Annealing Optimization algorithm
 #' @param simulated.annealing.parameter.report.iteration Used by Simulated Annealing Optimization algorithm
 #' @param simulated.annealing.parameter.power.penalty Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm
-#' @return List of optimized designs
+#' @return 4 element list containing optimized designs from four classes (with increasing complexity):
+#' @section Designs:
+#' Single.Stage.Equal.Alpha.Allocation.Design
+#' Single.Stage.Optimized.Alpha.Allocation.Design
+#' Two.Stage.Equal.Alpha.Allocation.Design
+#' Two.Stage.Optimized.Alpha.Allocation.Design
+#'
+#' The first two designs are not adaptive, while the second two designs are adaptive.
+#'
+#' Each optimized design is a list containing design.parameters and design.performance
+#' @section design.parameters:
+#' design.parameters contains the following values:
+#' cumulative.sample.sizes.and.calendar.time.per.stage=cumulative number enrolled (if no early stopping) per stage and calendar times of analyses just after each stage. In column names, ``A'' and ``C'' denote the treatment arm and control arm, respectively; numbers 1 and 2 indicate the corresponding subpopulation. Sample sizes represent the number enrolled at the time of the corresponding analysis (which may exceed the number of participants with outcomes observed, due to the time between enrollment and outcome measurement for each participant
+#'
+#' alpha.allocation=Alpha allocation using Error Spending Approach
+#'
+#' futility.boundaries=Boundaries for stopping subpopulation accrual, on the z-scale (or in designs with more than one treatment arm compared to control, this is gives for each treatment arm by subpopulation combination.
+#'
+#' @section design.performance:
+#' design.performance contains the following values:
+#' Power=Power to reject each null hypothesis under each scenario (NA indicates null hypothesis is true, so no power is presented)
+#'
+#' Type.1.Error=Type I error for each null hypothesis under each scenario (NA indicates null hypothesis is false)
+#'
+#' Expected.Sample.Size
+#'
+#' Expected.Duration (in years)
+#'
+#' Distribution.of.sample.size.and.duration.per.scenario=For each scenario, every possible combination of early stopping is considered. Columns C1, A1, etc. have the same meaning as described about for sample.sizes.and.calendar.time.per.stage. The value listed under each such column gives the analysis number at which accrual for that arm by subpopulation combination is stopped. E.g., C1=2,C2=1,A1=2,A2=1 corresponds to stopping the control and treatment A for subpopualtion 1 at the end of stage 1, while these continue to the end of stage 2 for subpopulation 2. The subsequent columns give the sample size, duration, and person-time when this pattern occurs. The columns frequency and proportion tell how often this pattern occurred under the corresponding scenario number (based on simulation).
 #' @export
 #' @examples
-#' optimize_designs(
+#' #For demonstration purposes, the examples below only execute 2 iterations of simulated annealing.
+#' #In general, it is recommended to use at least 500 iterations.
+#' #Example 1: Time-to-event outcome; 1 treatment arm versus control; non-inferiority design
+#' optimized_designs <- optimize_designs(
 #'   ui.n.arms=2,
 #'   ui.type.of.outcome.data="time-to-event",
 #'   ui.time.to.event.trial.type="non-inferiority",
@@ -56,11 +87,71 @@
 #'   ui.max.stages=2,
 #'   ui.sann=10,
 #'   ui.include.designs.start.subpop.1=FALSE,
-#'   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001, 1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,,dimnames=list(c(),c("lambda1_con","lambda2_con","lambda1_trt","lambda2_trt"))),
-#'   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3, byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
+#'   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001,
+#'     1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,
+#'     dimnames=list(c(),c("lambda1_con","lambda2_con","lambda1_trt","lambda2_trt"))),
+#'   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3,
+#'     byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
 #'   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight"))),
 #'   simulated.annealing.parameter.max.iterations=2,
 #'   )
+#'
+#'   #Example 2: continuous outcome; 1 treatment arm versus control; superiority design
+#' optimized_designs <- optimize_designs(
+#'   ui.n.arms=2,
+#'   ui.type.of.outcome.data="continuous",
+#'   ui.time.to.event.trial.type="",
+#'   ui.time.to.event.non.inferiority.trial.margin=NULL,
+#'   ui.subpopulation.1.size=0.5,
+#'   ui.total.alpha=0.05,
+#'   ui.max.size=1000,
+#'   ui.max.duration=5,
+#'   ui.accrual.yearly.rate=250,
+#'   ui.followup.length=1,
+#'   ui.optimization.target="size",
+#'   ui.time.to.event.censoring.rate=0,
+#'   ui.mcid=NULL,
+#'   ui.incorporate.precision.gain=FALSE,
+#'   ui.relative.efficiency=1,
+#'   ui.max.stages=5,
+#'   ui.sann=10,
+#'   ui.include.designs.start.subpop.1=FALSE,
+#'   ui.population.parameters=matrix(c(15,15,3600,3600,3600,3600,15,0,3600,3600,3600,3600,
+#'     0,15,3600,3600,3600,3600,0,0,3600,3600,3600,3600),nrow=4, ncol=6, byrow=TRUE,dimnames=
+#'     list(c(),c("delta1","delta2","sigma1_trt","sigma1_con","sigma2_trt","sigma2_con"))),
+#'   ui.desired.power=matrix(c(0,0,0.8,0.8,0,0,0,0.8,0,0,0,0), nrow=4, ncol=3, byrow=TRUE,
+#'     dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
+#'   ui.scenario.weights=matrix(c(0.25,0.25,0.25,0.25),ncol=1,dimnames=list(c(),c("weight"))),
+#'   simulated.annealing.parameter.max.iterations=2
+#' )
+#'
+#'  #Example 3: binary outcome; 1 treatment arm versus control; superiority design
+#' optimized_designs <- optimize_designs(
+#'   ui.n.arms=2,
+#'   ui.type.of.outcome.data="binary",
+#'   ui.time.to.event.trial.type="",
+#'   ui.time.to.event.non.inferiority.trial.margin=NULL,
+#'   ui.subpopulation.1.size=0.4,
+#'   ui.total.alpha=0.05,
+#'   ui.max.size=2000,
+#'   ui.max.duration=5,
+#'   ui.accrual.yearly.rate=400,
+#'   ui.followup.length=0,
+#'   ui.optimization.target="size",
+#'   ui.time.to.event.censoring.rate=0,
+#'   ui.mcid=NULL,
+#'   ui.incorporate.precision.gain=TRUE,
+#'   ui.relative.efficiency=1.2,
+#'   ui.max.stages=5,
+#'   ui.sann=10,
+#'   ui.include.designs.start.subpop.1=FALSE,
+#'   ui.population.parameters=matrix(c(0.4,0.3,0.5,0.4,0.4,0.3,0.4,0.4,0.3,0.3,0.4,0.4),
+#'     nrow=3, ncol=4, byrow=TRUE,dimnames=list(c(),c("p1_trt","p1_con","p2_trt","p2_con"))),
+#'   ui.desired.power=matrix(c(0,0,0.8,0.8,0,0,0,0,0), nrow=3, ncol=3, byrow=TRUE,
+#'     dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
+#'   ui.scenario.weights=matrix(c(0.33,0.33,0.34),ncol=1,dimnames=list(c(),c("weight"))),
+#'   simulated.annealing.parameter.max.iterations=2
+#' )
 #' @importFrom stats plogis
 #' @importFrom mvtnorm pmvnorm GenzBretz
 optimize_designs <- function(
@@ -131,6 +222,10 @@ optimize_designs <- function(
     design.evaluate <-
       function(...){
         design.evaluate.OneTreatmentArm(...)
+      }
+    summarize.design.parameters.and.performance <-
+      function(...){
+        summarize.design.parameters.and.performance.OneTreatmentArm(...)
       }
   } else if(n.arms==3){
     # Computes distribution of test statistics in a given scenario,
@@ -708,5 +803,5 @@ optimize_designs <- function(
                   optimization.target=ui.optimization.target)
   }
 
-  return(list(osea.result,osoa.result,tsea.result,tsoa.result))
+  return(lapply(list(Single.Stage.Equal.Alpha.Allocation.Design=osea.result,Single.Stage.Optimized.Alpha.Allocation.Design=osoa.result,Two.Stage.Equal.Alpha.Allocation.Design=tsea.result,Two.Stage.Optimized.Alpha.Allocation.Design=tsoa.result),summarize.design.parameters.and.performance))
 }
