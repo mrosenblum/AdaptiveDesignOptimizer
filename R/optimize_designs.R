@@ -17,7 +17,6 @@
 #' @param ui.incorporate.precision.gain Incorporate into analysis a precision gain from adjustment for prognostic baseline variables; allowed values: TRUE or FALSE
 #' @param ui.relative.efficiency If ui.incorporate.precision.gain==TRUE, this specifies relative efficiency (number > 1), representing the assumed precision gain from adjustment for prognostic baseline variables.
 #' @param ui.max.stages Maximum number of stages allowed (currently not used by default classes of trial designs)
-#' @param ui.sann Maximum Number of Different Designs to Search Over (using Simluated Annealing optimization); currently this is not used--see simulated.annealing.parameter.max.iterations below
 #' @param ui.include.designs.start.subpop.1 Search over designs that allow only subpopulation 1 to be enrolled during stage 1; TRUE or FALSE
 #' @param ui.population.parameters Matrix encoding scenarios (data generating distributions) used to define power constraints and  objective function
 #' @param ui.desired.power Matrix encoding power requirements for each scenario
@@ -85,7 +84,6 @@
 #'   ui.incorporate.precision.gain=FALSE,
 #'   ui.relative.efficiency=1,
 #'   ui.max.stages=2,
-#'   ui.sann=10,
 #'   ui.include.designs.start.subpop.1=FALSE,
 #'   ui.population.parameters= 0.08*matrix(c(1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.3500001,
 #'     1.00, 1.00, 1.00, 2.14, 1.00, 1.00, 1.3500001, 1.3500001), ncol=4, byrow=TRUE,
@@ -114,7 +112,6 @@
 #'   ui.incorporate.precision.gain=FALSE,
 #'   ui.relative.efficiency=1,
 #'   ui.max.stages=5,
-#'   ui.sann=10,
 #'   ui.include.designs.start.subpop.1=FALSE,
 #'   ui.population.parameters=matrix(c(15,15,3600,3600,3600,3600,15,0,3600,3600,3600,3600,
 #'     0,15,3600,3600,3600,3600,0,0,3600,3600,3600,3600),nrow=4, ncol=6, byrow=TRUE,dimnames=
@@ -143,7 +140,6 @@
 #'   ui.incorporate.precision.gain=TRUE,
 #'   ui.relative.efficiency=1.2,
 #'   ui.max.stages=5,
-#'   ui.sann=10,
 #'   ui.include.designs.start.subpop.1=FALSE,
 #'   ui.population.parameters=matrix(c(0.4,0.3,0.5,0.4,0.4,0.3,0.4,0.4,0.3,0.3,0.4,0.4),
 #'     nrow=3, ncol=4, byrow=TRUE,dimnames=list(c(),c("p1_trt","p1_con","p2_trt","p2_con"))),
@@ -171,7 +167,6 @@ optimize_designs <- function(
   ui.incorporate.precision.gain,
   ui.relative.efficiency,
   ui.max.stages,
-  ui.sann,
   ui.include.designs.start.subpop.1,
   ui.population.parameters,
   ui.desired.power,
