@@ -1275,9 +1275,8 @@ summarize.design.parameters.and.performance.OneTreatmentArm <- function(optimize
   expected.duration <- optimized.design$expected.duration.per.scenario
   expected.duration <- optimized.design$optima$expected.duration.per.scenario
   expected.duration <- c(expected.duration,sum(optimized.design$evaluate.object.parameters$scenario.weights*expected.duration))
-  expected.duration <- sapply(expected.duration,round,0)
+  expected.duration <- sapply(expected.duration,round,2)
   expected.duration <- data.frame(Scenario = c(1:nrow(power.summary),"Weighted.Combination.Over.Scenarios"),expected.duration)
-
 
   performance.list <- list(Power=power.summary,Type.1.Error = type.1.error.summary,
                            Expected.Sample.Size=expected.sample.size,Expected.Duration=expected.duration,
