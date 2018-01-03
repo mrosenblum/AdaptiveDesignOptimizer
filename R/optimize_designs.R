@@ -34,18 +34,19 @@
 #' @param simulated.annealing.parameter.report.iteration Used by Simulated Annealing Optimization algorithm
 #' @param simulated.annealing.parameter.power.penalty Used in Objective Function to incorporate Power Constraints by Simulated Annealing Optimization algorithm
 #' @return 4 element list containing optimized designs from four classes (with increasing complexity):
-#' @section Designs:
+#' @section Designs: (first two not adaptive; last two adaptive)
 #' Single.Stage.Equal.Alpha.Allocation.Design
+#'
 #' Single.Stage.Optimized.Alpha.Allocation.Design
+#'
 #' Two.Stage.Equal.Alpha.Allocation.Design
+#'
 #' Two.Stage.Optimized.Alpha.Allocation.Design
 #'
-#' The first two designs are not adaptive, while the second two designs are adaptive.
-#'
-#' Each optimized design is a list containing design.parameters and design.performance
+#' Each optimized design is a list containing: design.parameters and design.performance
 #' @section design.parameters:
-#' design.parameters contains the following values:
-#' cumulative.sample.sizes.and.calendar.time.per.stage=cumulative number enrolled (if no early stopping) per stage and calendar times of analyses just after each stage. In column names, ``A'' and ``C'' denote the treatment arm and control arm, respectively; numbers 1 and 2 indicate the corresponding subpopulation. Sample sizes represent the number enrolled at the time of the corresponding analysis (which may exceed the number of participants with outcomes observed, due to the time between enrollment and outcome measurement for each participant
+#' design.parameters has the following elements:
+#' cumulative.sample.sizes.and.calendar.time.per.stage The cumulative number enrolled (if no early stopping) per stage and calendar times of analyses just after each stage. In column names, ``A'' and ``C'' denote the treatment arm and control arm, respectively; numbers 1 and 2 indicate the corresponding subpopulation. Sample sizes represent the number enrolled at the time of the corresponding analysis (which may exceed the number of participants with outcomes observed, due to the time between enrollment and outcome measurement for each participant
 #'
 #' alpha.allocation=Alpha allocation using Error Spending Approach
 #'
