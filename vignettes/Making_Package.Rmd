@@ -1,0 +1,14 @@
+---
+title: "CHANGE THIS TITLE"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CHANGE THIS TITLE}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# This is my vignette
+
+Optimization example

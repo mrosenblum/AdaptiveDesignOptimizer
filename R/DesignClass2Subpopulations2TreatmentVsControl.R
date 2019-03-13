@@ -1056,4 +1056,65 @@ design.evaluate.TwoTreatmentArms <- function(test.statistics,
           return(list(rejection.matrix = reject.hyp,
             stage.decision = stage.decision,
             eff.boundaries = efficacy.boundary))
-        }
+}
+
+summarize.design.parameters.and.performance.TwoTreatmentArms <- function(optimized.design){
+  #Format design parameter list including: sample sizes and analysis timing, alpha allocations, futility boundaries
+
+  # Extract and format sample sizes and analysis timing
+  cumulative.sample.sizes.and.calendar.time.per.stage <- data.frame(Stage = 1:nrow(optimized.design$optima$per.stage.sample.sizes$total.n.per.stage),optimized.design$optima$per.stage.sample.sizes$total.n.per.stage,Analysis.Time.In.Years=optimized.design$optima$analysis.times)
+
+  # Extract and format alpha allocation into dataframe (rows=stages, columns=subpopulations)
+  n.subpopulation <- 2
+  n.arms <- 3
+  alpha.allocation <- as.data.frame(matrix(optimized.design$parameters$alpha.allocation * optimized.design$parameters$total.alpha, ncol = n.subpopulation, byrow = T))
+  alpha.allocation <- sapply(alpha.allocation,round,4)
+  names(alpha.allocation) <- paste0("Subpop", 1:n.subpopulation)
+  if(is.null(dim(alpha.allocation))){
+    alpha.allocation <- matrix(alpha.allocation,nrow=1,byrow=TRUE)
+  }
+  alpha.allocation <- data.frame(Stage = 1:nrow(alpha.allocation),
+                                 alpha.allocation)
+  colnames(alpha.allocation) <- c("Stage","Subpop.1","Subpop.2")
+  # Format futility boundaries
+  n.subpopulation <- 2
+  futility.boundaries <- as.data.frame(matrix(c(optimized.design$parameters$futility.boundaries,NA,NA,NA,NA),ncol = (n.arms-1)*n.subpopulation, byrow = T))
+  futility.boundaries <- sapply(futility.boundaries,round,4)
+  names(futility.boundaries) <- names(cumulative.sample.sizes.and.calendar.time.per.stage)[4:7]
+  if(is.null(dim(futility.boundaries))){
+    futility.boundaries <- matrix(futility.boundaries,nrow=1,byrow=TRUE)
+  }
+  futility.boundaries <- data.frame(Stage = 1:nrow(futility.boundaries),
+                                    futility.boundaries)
+  #colnames(futility.boundaries) <- c("Stage","Subpop.1","Subpop.2")
+  parameter.list <- list(cumulative.sample.sizes.and.calendar.time.per.stage=cumulative.sample.sizes.and.calendar.time.per.stage,alpha.allocation=alpha.allocation,futility.boundaries=futility.boundaries)
+  #Format design performance list:
+  # Power in each scenario
+  # Type I error in each scenario (for each null hypothesis, and familywise)
+  # expected sample size and duration per scenario
+  # sample size and duration distributions in each scenario
+  power.summary <- cbind(optimized.design$optima$empirical.power,optimized.design$optima$conj.power)
+  power.summary <- data.frame(Scenario = 1:nrow(power.summary),
+                              power.summary)
+  colnames(power.summary) <- c("Scenario","Power.H01","Power.H02","Prob.Reject.All.False.Null.Hypotheses")
+  type.1.error.summary <- optimized.design$optima$type.1.error
+  type.1.error.summary <- data.frame(Scenario = 1:nrow(type.1.error.summary),
+                                     type.1.error.summary,optimized.design$optima$fwer)
+  colnames(type.1.error.summary) <- c("Scenario","Type.I.Error.H01","Type.I.Error.H02","Familywise.Type.I.Error")
+
+  expected.sample.size <- optimized.design$optima$expected.sample.size.per.scenario
+  expected.sample.size <- c(expected.sample.size,sum(optimized.design$evaluate.object.parameters$scenario.weights*expected.sample.size))
+  expected.sample.size <- sapply(expected.sample.size,round,0)
+  expected.sample.size <- data.frame(Scenario = c(1:nrow(power.summary),"Weighted.Combination.Over.Scenarios"),expected.sample.size)
+
+  expected.duration <- optimized.design$expected.duration.per.scenario
+  expected.duration <- optimized.design$optima$expected.duration.per.scenario
+  expected.duration <- c(expected.duration,sum(optimized.design$evaluate.object.parameters$scenario.weights*expected.duration))
+  expected.duration <- sapply(expected.duration,round,2)
+  expected.duration <- data.frame(Scenario = c(1:nrow(power.summary),"Weighted.Combination.Over.Scenarios"),expected.duration)
+
+  performance.list <- list(Power=power.summary,Type.1.Error = type.1.error.summary,
+                           Expected.Sample.Size=expected.sample.size,Expected.Duration=expected.duration,
+                           Distribution.of.sample.size.and.duration.per.scenario=optimized.design$optima$distribution.of.trials)
+  return(list(design.parameters=parameter.list,design.performance=performance.list))
+}

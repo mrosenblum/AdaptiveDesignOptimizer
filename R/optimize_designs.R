@@ -92,7 +92,7 @@
 #'   ui.desired.power=0.8*matrix(c(1.00, 1.00, 0, 1.00, 0, 0, 1.00, 0, 0, 0, 0, 0), ncol=3,
 #'     byrow=TRUE,dimnames=list(c(),c("Pow_H(0,1)","Pow_H(0,2)","Pow_Reject_H0,1_and_H0,2"))),
 #'   ui.scenario.weights=matrix(rep(0.25,4),ncol=1,dimnames=list(c(),c("weight"))),
-#'   simulated.annealing.parameter.max.iterations=2,
+#'   simulated.annealing.parameter.max.iterations=2
 #'   )
 #'
 #'   #Example 2: continuous outcome; 1 treatment arm versus control; superiority design
@@ -149,6 +149,40 @@
 #'   ui.scenario.weights=matrix(c(0.33,0.33,0.34),ncol=1,dimnames=list(c(),c("weight"))),
 #'   simulated.annealing.parameter.max.iterations=2
 #' )
+#'
+#'  #Example 4: continuous outcome; 2 treatment arms versus control; superiority design
+#'  optimized_designs <- optimize_designs(
+#'    ui.n.arms=3,
+#'    ui.type.of.outcome.data="continuous",
+#'    ui.time.to.event.trial.type="",
+#'    ui.time.to.event.non.inferiority.trial.margin=NULL,
+#'    ui.subpopulation.1.size=0.49,
+#'    ui.total.alpha=0.05,
+#'    ui.max.size=3000,
+#'    ui.max.duration=8,
+#'    ui.accrual.yearly.rate=240,
+#'    ui.followup.length=0.5,
+#'    ui.optimization.target="size",
+#'    ui.time.to.event.censoring.rate=0,
+#'    ui.mcid=NULL,
+#'    ui.incorporate.precision.gain=TRUE,
+#'    ui.relative.efficiency=1,
+#'    ui.max.stages=4,
+#'    ui.include.designs.start.subpop.1=FALSE,
+#'    ui.population.parameters=matrix(c(0,3600,0,3600,0,3600,0,3600,0,3600,0,3600,0,3600,0,3600,
+#'    15,3600,0,3600,0,3600,0,3600,0,3600,0,3600,15,3600,0,3600,15,3600,0,3600,0,3600,0,3600,15,
+#'    3600,15,3600,0,3600,0,3600,0,3600,0,3600,15,3600,15,3600,15,3600,0,3600,0,3600,0,3600,15,
+#'    3600,15,3600,15,3600,15,3600), nrow=6, ncol=12, byrow=TRUE),
+#'    ui.desired.power=matrix(c(
+#'      0,0,0,0,0,
+#'      0.8,0,0,0,0,
+#'      0.8,0,0.8,0,0,
+#'      0.8,0.8,0,0,0,
+#'      0.8,0.8,0.8,0,0,
+#'      0.8,0.8,0.8,0.8,0),
+#'      nrow=6, ncol=5, byrow=TRUE),
+#'    ui.scenario.weights=matrix(c(0.166,0.166,0.166,0.166,0.166,0.167)),
+#'    simulated.annealing.parameter.max.iterations=2)
 #' @importFrom stats plogis
 #' @importFrom mvtnorm pmvnorm GenzBretz
 optimize_designs <- function(
@@ -239,6 +273,10 @@ optimize_designs <- function(
     design.evaluate <-
       function(...){
         design.evaluate.TwoTreatmentArms(...)
+      }
+    summarize.design.parameters.and.performance <-
+      function(...){
+        summarize.design.parameters.and.performance.TwoTreatmentArms(...)
       }
   }
   # Set functions for computing design features and design evaluation
@@ -919,6 +957,8 @@ optimize_designs <- function(
                     optimization.target=ui.optimization.target)
     }
   }
-
-  return(lapply(list(Single.Stage.Equal.Alpha.Allocation.Design=osea.result,Single.Stage.Optimized.Alpha.Allocation.Design=osoa.result,Two.Stage.Group.Sequential.Design=group.sequential.tsoa.result,Two.Stage.Equal.Alpha.Allocation.Design=tsea.result,Two.Stage.Optimized.Alpha.Allocation.Design=tsoa.result),summarize.design.parameters.and.performance))
+  if(ui.n.arms==2){
+    output_summary <- lapply(list(Single.Stage.Equal.Alpha.Allocation.Design=osea.result,Single.Stage.Optimized.Alpha.Allocation.Design=osoa.result,Two.Stage.Group.Sequential.Design=group.sequential.tsoa.result,Two.Stage.Equal.Alpha.Allocation.Design=tsea.result,Two.Stage.Optimized.Alpha.Allocation.Design=tsoa.result),summarize.design.parameters.and.performance)}else{
+      output_summary <- lapply(list(Single.Stage.Equal.Alpha.Allocation.Design=osea.result,Single.Stage.Optimized.Alpha.Allocation.Design=osoa.result,Two.Stage.Equal.Alpha.Allocation.Design=tsea.result,Two.Stage.Optimized.Alpha.Allocation.Design=tsoa.result),summarize.design.parameters.and.performance)}
+  return(output_summary)
 }
